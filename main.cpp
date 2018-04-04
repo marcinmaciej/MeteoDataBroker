@@ -18,8 +18,6 @@ int main(int argc, char * argv[])
                  OFFSET_PATH = "/etc/" + APP_NAME + "/offset", /* BufferManager.h */
                  DATA_PATH = "/var/meteo-data"; /* BufferManager.h */
 
-
-
     /* Variables declarations: */
     string argument;
 
@@ -33,8 +31,6 @@ int main(int argc, char * argv[])
 
     struct stat st = {0};
     /* -------------------------------------- */
-
-
 
     if(argc>1)
     {

@@ -1,0 +1,8 @@
+
+
+# IMPORTANT:
+# The path: "/etc/meteo-station/config" is used in class file "HttpConnection.h".
+# Folder "config" should exists in it with two config files before starting the app. The "request.http" and "config.http".
+# The path: "/etc/meteo-station/" is used in class file DaemonsManager.h and should exist before starting the app.
+# This path: "/usr/bin/" is recommended to place the app.
+
