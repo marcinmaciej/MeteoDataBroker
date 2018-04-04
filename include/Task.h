@@ -12,7 +12,8 @@ class Task
 		Task();
         virtual ~Task() = default;
 
-	virtual void task(const char * logName) = 0;
+
+		virtual void task(const char * logName) = 0;
 
 	protected:
 		const char * logName;

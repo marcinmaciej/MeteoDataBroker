@@ -1,5 +1,6 @@
 #include "HttpConnection.h"
 
+
 HttpConnection::HttpConnection()
 {
 
@@ -66,6 +67,10 @@ int HttpConnection::httpConnect()
         {
             throw errno;
         }
+
+#if TESTING
+        this->meteoLog->notice("Http connected!");
+#endif // TESTING
 
         return 0;
 

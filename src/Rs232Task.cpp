@@ -25,6 +25,15 @@ void Rs232Task::task(const char * logName)
 
         *readData = this->buffer->c_str();
 
+#if TESTING
+/* TESTING BLOCK */
+auto * ms = new string("readPort returned = ");
+*ms += readData->c_str();
+this->meteoLog->notice(ms->c_str());
+delete ms;
+/*-------------------------------------------------------------------------*/
+#endif // TESTING
+
         if(!readData->empty())
         {
             /* Write to buffer before sending */
@@ -53,12 +62,30 @@ void Rs232Task::readPort()
         /* Open port and set port configuration to read */
         this->setPortConfig();
 
+#if TESTING
+/* TESTING BLOCK */
+    ioctl(this->getFileDesc(), FIONREAD, &this->bytesAvailable);
+    string ms("Bytes available = ");
+    ms += to_string(this->bytesAvailable);
+    this->meteoLog->warn(ms.c_str());
+/*--------------------------------------------------------------------------*/
+#endif // TESTING
+
         this->buffer->clear();
 
         if(read(this->getFileDesc(), const_cast<char *>(this->buffer->c_str()), static_cast<size_t>(this->BYTES_TO_READ)) <  0)
         {
             throw errno;
         }
+
+#if TESTING
+/* TESTING CODE */
+        ms.clear();
+        ms = "Content read from port = ";
+        ms += this->buffer->c_str();
+        this->meteoLog->warn(ms.c_str());
+/*---------------------------------------------------------------------------------*/
+#endif
 
     }
     catch(const char * s)

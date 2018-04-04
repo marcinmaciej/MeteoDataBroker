@@ -1,6 +1,8 @@
 #ifndef HTTPCONNECTION_H
 #define HTTPCONNECTION_H
 
+#define TESTING true
+
 #include <netdb.h>
 #include <sys/socket.h>
 
@@ -106,7 +108,7 @@ private:
 
     void createSocket(int ai_family);
 
-    void collectGarbage();
+    /* void collectGarbage(); */
 };
 
 #endif // HTTPCONNECTION_H

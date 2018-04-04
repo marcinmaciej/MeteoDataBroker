@@ -15,7 +15,7 @@ class MeteoLog
 {
 
 public:
-    MeteoLog(string ident = "MeteoStationLog");
+    explicit MeteoLog(string ident = "MeteoStationLog");
     ~MeteoLog() = default;
 
     void info(const char * msg);

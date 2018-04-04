@@ -31,6 +31,17 @@ void HttpTask::task(const char * logName)
         /* Get number of bytes to change reading buffer offset */
         readBytesNum = readData->length();
 
+#if TESTING
+/* TESTING BLOCK */
+auto * ms = new string("Bytes to send = ");
+*ms += to_string(readBytesNum);
+*ms += " content = ";
+*ms += *readData;
+this->meteoLog->warn(ms->c_str());
+delete ms;
+/*---------------------------------------------------------------------*/
+#endif // TESTING
+
         if(!readData->empty())
         {
             if(readBytesNum == this->BYTES_TO_READ)

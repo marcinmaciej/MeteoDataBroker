@@ -1,6 +1,8 @@
 #ifndef HTTPTASK_H
 #define HTTPTASK_H
 
+#define TESTING true
+
 #include "Task.h"
 
 #include "HttpConnection.h"

@@ -11,8 +11,6 @@ BufferManager::BufferManager(int mode)
             this->loadOffset();
         }
 
-        this->setBuffFilePath();
-
         this->openBuffer(mode);
 
     }
@@ -40,9 +38,30 @@ void BufferManager::writeBuffer(const char *data)
 
         numToWrite = temp->length();
 
+#if TESTING
+        /* TESTING BLOCK */
+        auto * ms = new string("writeBuffer(bytes to write) = ");
+        *ms += to_string(numToWrite);
+        this->meteoLog->err(ms->c_str());
+        *ms = "Content to write = ";
+        *ms += *temp;
+        this->meteoLog->warn(ms->c_str());
+        /*--------------------------------------------------------------------------------*/
+#endif // TESTING
 
         numWritten = write(this->getBuffFileDesc(), temp->c_str(), numToWrite);
 
+#if TESTING
+        /* TESTING BLOCK */
+        *ms = ("writeBuffer(bytes written) = ");
+        *ms += to_string(numWritten);
+        this->meteoLog->err(ms->c_str());
+        *ms = "Content written = ";
+        *ms += *temp;
+        this->meteoLog->warn(ms->c_str());
+        delete ms;
+        /*--------------------------------------------------------------------------------*/
+#endif // TESTING
 
         if (numWritten != numToWrite)
         {
@@ -76,6 +95,20 @@ void BufferManager::readBuffer()
         {
             throw errno;
         }
+
+#if TESTING
+        /* TESTING BLOCK */
+        auto * ms = new string("From buffer should read = 10 bytes and read = ");
+        *ms += to_string(strlen(this->buffer->c_str()));
+        this->meteoLog->warn(ms->c_str());
+        delete ms;
+
+        auto * ms2 = new string("Buffer content is = ");
+        *ms2 += this->buffer->c_str();
+        this->meteoLog->err(ms2->c_str());
+        delete ms2;
+        /*------------------------------------------------------------------------------------*/
+#endif // TESTING
 
         close(this->getBuffFileDesc());
 
@@ -126,7 +159,8 @@ string BufferManager::getCurrentDate()
 */
 const char *BufferManager::getBufferFilePath()
 {
-    return this->buffer_path;
+   /* return this->buffer_path; */
+    return this->BUFFER_DIR;
 }
 
 const char *BufferManager::getOffsetFilePath()
@@ -147,20 +181,20 @@ void BufferManager::setBuffFileDesc(int fd)
 {
     this->buffFileDesc = fd;
 }
-
+/*
 void BufferManager::setBuffFilePath()
 {
 
-    /*this->setCurrentDate();*/
+    this->setCurrentDate();
 
     string path = this->BUFFER_DIR;
-    /* path += this->getCurrentDate(); */
+    path += this->getCurrentDate();
     path += this->BUFFER_FILE_NAME;
 
     strcpy(this->buffer_path, path.c_str());
 
 }
-/*
+
 void BufferManager::setCurrentDate()
 {
 
@@ -191,6 +225,14 @@ void BufferManager::loadOffset()
     {
         throw errno;
     }
+
+#if TESTING
+    /* TESTING BLOCK */
+    string tm = "offset loaded = ";
+    tm += buf;
+    this->meteoLog->err(tm.c_str());
+    /*-----------------------------------------------------------*/
+#endif // TESTING
 
     this->setOffset(atoi(buf));
 
@@ -241,6 +283,15 @@ void BufferManager::saveOffset(off_t offset)
     string offsetAsString = to_string(offset);
     auto len = static_cast<size_t>(offsetAsString.length());
 
+#if TESTING
+    /* TESTING BLOCK */
+    auto * ms = new string("Offset to save = ");
+    *ms += offsetAsString;
+    this->meteoLog->err(ms->c_str());
+    delete ms;
+    /*-------------------------------------------------------------------------------*/
+#endif // TESTING
+
     this->openOffsetFile(O_WRONLY);
 
     if (write(this->getOffsetFileDesc(), offsetAsString.c_str(), len) < 0)
@@ -257,5 +308,5 @@ BufferManager::~BufferManager()
 
     delete this->buffer;
     delete this->meteoLog;
-    delete this->buffer_path;
+    /* delete this->buffer_path;  */
 }

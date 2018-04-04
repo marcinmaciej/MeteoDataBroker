@@ -1,6 +1,8 @@
 #ifndef _BUFFERMANAGER_H
 #define _BUFFERMANAGER_H
 
+#define TESTING true
+
 #include <fcntl.h>
 #include <ctime>
 
@@ -26,15 +28,16 @@ public:
 
 private:
 
-    const char * BUFFER_DIR =  "/var/meteo-data/",
-                 * BUFFER_FILE_NAME =  "meteo.data",
+    const char * BUFFER_DIR =  "/var/meteo-data/meteo.data",
+                /* * BUFFER_FILE_NAME =  "", */
                    * OFFSET_PATH=  "/etc/meteo-station/offset/seek.offset";
-
-    char * buffer_path = new char[2048];;
 
     string * buffer = new string();
 
-    string currentDate;
+    /*
+     * char * buffer_path = new char[2048];
+     * string currentDate;
+     */
 
     const size_t BYTES_TO_READ = 10;
 
@@ -48,7 +51,9 @@ private:
     /* Private methods */
 
     /* Getters for buffer */
-    /* string getCurrentDate(); */
+    /*
+     * string getCurrentDate();
+     */
     int getBuffFileDesc();
     const char * getBufferFilePath();
 
@@ -58,8 +63,10 @@ private:
     const char * getOffsetFilePath();
 
     /* Setters for buffer */
-    /* void setCurrentDate(); */
-    void setBuffFilePath();
+    /*
+     * void setCurrentDate();
+     * void setBuffFilePath();
+     */
     void setBuffFileDesc(int fd);
     void openBuffer(int mode);
 

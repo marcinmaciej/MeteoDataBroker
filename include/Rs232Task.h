@@ -1,6 +1,9 @@
 #ifndef RS232TASK_H
 #define RS232TASK_H
 
+#define TESTING true
+#define RASPBERRYPI false
+
 #include "Task.h"
 
 #include "BufferManager.h"
@@ -17,8 +20,13 @@ public:
 
 private:
 
-    /* For RASPBERRY PI ONLY */
-    const char * PATH = "/dev/ttyAMA0";
+#if RASPBERRYPI
+    /* For RASPBERRYPI only */
+     const char * PATH = "/dev/ttyAMA0";
+#else
+    /* With prolific cable */
+    const char * PATH = "/dev/ttyUSB0";
+#endif
 
     int fileDescriptor,
         bytesAvailable;
