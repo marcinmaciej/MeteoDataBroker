@@ -7,23 +7,42 @@
 
 #include <iostream>
 
-using  namespace std;
+using namespace std;
 
-class SerialPort {
+class SerialPort
+{
 
 public:
-    explicit SerialPort(string port = "/dev/ttyAMA0"); /* Default port for Raspbian */
-    ~SerialPort() = default;
+    explicit SerialPort(const string &port = "/dev/ttyAMA0");
+
+    virtual ~SerialPort() = default;
+
 
     /* Default serial raw mode with 8n1 frame no parity and baud rate 9600 */
-    void setPort(string port = "/dev/ttyAMA0"); /* Default port for Raspbian */
-    void setParity(string parity = "none");
-    void setFlowControl(string flowControl = "none");
+    void setPort(const string &port = "/dev/ttyAMA0"); /* Default port for Raspbian */
+
     void setSpeed(unsigned short speed = 9600); /* Default baud rate for Raspberry Pi B */
+
     void setDataBits(unsigned char dataBits = 8);
+
     void setStopBits(unsigned char stopBits = 1);
 
+    void setParity(const string &parity = "none");
 
+    void setFlowControl(const string &flowControl = "none");
+
+
+    const string &getPort() const;
+
+    const string &getParity() const;
+
+    const string &getFlowControl() const;
+
+    unsigned short getSpeed() const;
+
+    unsigned char getDataBits() const;
+
+    unsigned char getStopBits() const;
 
 private:
     string port;
@@ -33,12 +52,6 @@ private:
     unsigned char dataBits;
     unsigned char stopBits;
 
-    string getPort();
-    string getParity();
-    string getFlowControl();
-    unsigned short getSpeed();
-    unsigned char getDataBits();
-    unsigned char getStopBits();
 
 };
 
