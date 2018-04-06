@@ -1,21 +1,18 @@
 #include "MyDaemon.h"
 
 
-MyDaemon::MyDaemon(unsigned short sleepTime, Task * task, const char * daemonName, string path)
+MyDaemon::MyDaemon(unsigned int sleepTime, Task *task, const string &daemonName, const string &path)
 {
     this->task = task;
     this->sleepTime = sleepTime;
-    this->DAEMON_NAME = daemonName;
+    this->daemonName = daemonName;
 
-    this->pidFileName = "."; /* Make file hidden */
-    this->pidFileName += this->DAEMON_NAME;
-    this->pidFileName += ".pid";
+    this->pidFilePath = path;
+    this->pidFilePath += "."; /* Make file hidden */
+    this->pidFilePath += this->daemonName;
+    this->pidFilePath += ".pid";
 
-
-    this->meteoLog = new MeteoLog(this->DAEMON_NAME);
-
-    this->pidFilePath = path + this->pidFileName;
-
+    this->meteoLog = new MeteoLog(this->daemonName);
 
     try
     {
@@ -25,9 +22,9 @@ MyDaemon::MyDaemon(unsigned short sleepTime, Task * task, const char * daemonNam
         /* Open any logs here */
 
         /* Create a new SID (session id same as process id PID) for the child process */
-        this->sid = setsid();
+        this->setSid(setsid());
 
-        if (this->sid < 0)
+        if (this->getSid() < 0)
         {
             /* Log the failure */
             throw errno;
@@ -46,8 +43,10 @@ MyDaemon::MyDaemon(unsigned short sleepTime, Task * task, const char * daemonNam
         close(STDOUT_FILENO);
         close(STDERR_FILENO);
 
+        this->start();
+
     }
-    catch(...)
+    catch (...)
     {
         this->meteoLog->err(strerror(errno));
 
@@ -55,53 +54,35 @@ MyDaemon::MyDaemon(unsigned short sleepTime, Task * task, const char * daemonNam
     }
 }
 
+int MyDaemon::getPidFileDesc() const
+{
+    return this->pidFileDescriptor;
+}
+
+void MyDaemon::setPidFileDesc(int pidFileDescriptor)
+{
+    MyDaemon::pidFileDescriptor = pidFileDescriptor;
+}
+
 void MyDaemon::start()
 {
-    /* Convert pid to a string */
-    const char * pidAsChar = to_string(this->sid).c_str();
-
 
     /* Daemon-specific initialization goes here */
     try
     {
+        this->exitOnAnotherInstance();
 
-        /* Open pid file to write the pid */
-        if((this->pidFileDescriptor = open(this->pidFilePath.c_str(), O_CREAT | O_WRONLY, 0600)) == -1)
-        {
-            throw errno;
-        }
+        this->saveNewPid();
 
-
-        /* Try to lock pid file or if locked exit */
-        if(lockf(this->pidFileDescriptor, F_TLOCK, 0))
-        {
-                throw errno;    /* Exit another instance is running */
-        }
-
-        /* Remove old PID */
-        if(ftruncate(this->pidFileDescriptor, 0) < 0)
-        {
-            throw errno;
-        }
-
-
-        auto len = static_cast<ssize_t>(strlen(pidAsChar));
-
-        /* Write daemon pid to a file */
-        if((write(this->pidFileDescriptor, pidAsChar, static_cast<size_t>(len))) < len)
-        {
-            throw errno;
-        }
-
-        string msg ="Daemon: ";
-        msg += this->DAEMON_NAME;
+        string msg = "Daemon: ";
+        msg += this->daemonName;
         msg += " started!";
 
         /* Say you are here */
         this->meteoLog->notice(msg.c_str());
 
     }
-    catch(...)
+    catch (...)
     {
         this->meteoLog->err(strerror(errno));
 
@@ -113,23 +94,23 @@ void MyDaemon::start()
     /* The Main Loop */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
-    while (1)
+    while (true)
     {
 
         try
         {
             /* Do some task here ... */
-            this->task->task(this->DAEMON_NAME);
+            this->task->task(this->daemonName.c_str());
 
             /* And sleep, wait N seconds */
             sleep(this->getSleepTime());
 
         }
-        catch(const char * s)
+        catch (const char *s)
         {
             this->meteoLog->err(s);
         }
-        catch(...)
+        catch (...)
         {
             this->meteoLog->err(strerror(errno));
         }
@@ -139,9 +120,56 @@ void MyDaemon::start()
     exit(EXIT_SUCCESS);
 }
 
-unsigned short MyDaemon::getSleepTime()
+pid_t MyDaemon::getSid() const
+{
+    return this->sid;
+}
+
+void MyDaemon::setSid(pid_t sid)
+{
+    this->sid = sid;
+}
+
+unsigned int MyDaemon::getSleepTime() const
 {
     return this->sleepTime;
+}
+
+void MyDaemon::exitOnAnotherInstance()
+{
+    /* Open pid file to write the pid */
+    this->setPidFileDesc(open(this->pidFilePath.c_str(), O_CREAT | O_WRONLY, 0600));
+
+    if (this->getPidFileDesc() == -1)
+    {
+        throw errno;
+    }
+
+    /* Try to lock pid file or if locked exit */
+    if (lockf(this->getPidFileDesc(), F_TLOCK, 0))
+    {
+        throw errno;    /* Exit another instance is running */
+    }
+}
+
+void MyDaemon::saveNewPid()
+{
+    /* Convert pid to a string */
+    const char *pidAsChar = to_string(this->getSid()).c_str();
+
+    /* Remove old PID */
+    if (ftruncate(this->getPidFileDesc(), 0) < 0)
+    {
+        throw errno;
+    }
+
+    auto len = static_cast<ssize_t>(strlen(pidAsChar));
+
+    /* Write daemon pid to a file */
+    if ((write(this->getPidFileDesc(), pidAsChar, static_cast<size_t>(len))) < len)
+    {
+        throw errno;
+    }
 }
 
 MyDaemon::~MyDaemon()

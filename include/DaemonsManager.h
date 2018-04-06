@@ -10,33 +10,53 @@ class DaemonsManager
 public:
 
     DaemonsManager();
+
     ~DaemonsManager();
 
     void startDaemons();
+
     void restartDaemons();
+
     void killAll();
 
 private:
 
-    const unsigned char HTTPD = 0,
-                        RS232D = 1,
-                        SLEEP_TIME[2] = { 10, 2 };
+    const unsigned char RS232D = 0,
+            HTTPD = 1;
 
-    const char * PATH = "/etc/meteo-station/",
-                 * DAEMONS_NAMES[2] = { "httpd", "rs232d" },
-                                      * FILE_EXT = ".pid";
+    unsigned int *sleepTime;
 
+    const string *pidFilePath,
+            *daemonsNames,
+            *FILE_EXT;
 
-    pid_t * daemonsPids;
+    pid_t *daemonsPids;
 
-    MyDaemon * httpd;
-    MyDaemon * rs232d;
+    MyDaemon *httpd,
+            *rs232d;
 
-    MeteoLog * meteoLog;
+    MeteoLog *meteoLog;
 
-    bool isRunning(const pid_t * daemonPid);
+    const string getPidFilePath() const;
+
+    unsigned int getSleepTime(unsigned char daemon) const;
+
+    const string getDaemonName(unsigned char daemon) const;
+
+    pid_t *getPid(unsigned char daemon) const;
+
+    void setDaemonsNames(const string *daemonsNames);
+
+    void setSleepTime(unsigned int *sleepTime);
+
+    void setPid(unsigned char daemon, pid_t pid);
+
+    bool isRunning(const pid_t *daemonPid);
+
     void killDaemon(const pid_t *daemonPid);
-    void getPid(int daemon);
+
+    void getSavedPid(int daemon);
+
     void collectGarbage();
 };
 

@@ -14,28 +14,41 @@ class MyDaemon
 {
 public:
 
-    MyDaemon(unsigned short sleepTime, Task *task,const char * daemonName, string path);
+    MyDaemon(unsigned int sleepTime, Task *task, const string &daemonName, const string &path);
+
     ~MyDaemon();
 
-    void start();
+    pid_t getSid() const;
+
 
 private:
 
-    unsigned short getSleepTime();
-    unsigned short sleepTime;
+    unsigned int sleepTime;
 
-    const char * DAEMON_NAME;
-
-    Task * task;
+    Task *task;
 
     pid_t sid;
 
-    string pidFileName,
-           pidFilePath;
+    string pidFilePath,
+            daemonName;
 
-    MeteoLog * meteoLog;
+    MeteoLog *meteoLog;
 
     int pidFileDescriptor;
+
+    int getPidFileDesc() const;
+
+    unsigned int getSleepTime() const;
+
+    void setPidFileDesc(int pidFileDescriptor);
+
+    void setSid(pid_t sid);
+
+    void saveNewPid();
+
+    void exitOnAnotherInstance();
+
+    void start();
 };
 
 #endif // MYDAEMON_H

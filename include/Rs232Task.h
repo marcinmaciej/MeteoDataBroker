@@ -22,7 +22,7 @@ private:
 
 #if RASPBERRYPI
     /* For RASPBERRYPI only */
-     const char * PATH = "/dev/ttyAMA0";
+     const char * pidFilePath = "/dev/ttyAMA0";
 #else
     /* With prolific cable */
     const char * PATH = "/dev/ttyUSB0";
