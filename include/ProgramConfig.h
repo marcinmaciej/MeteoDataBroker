@@ -12,7 +12,7 @@ using namespace std;
 class ProgramConfig
 {
 public:
-    explicit ProgramConfig(const unsigned int *sleepTimes = new unsigned int[2]{2,5});
+    explicit ProgramConfig(const unsigned int *sleepTimes = new unsigned int[2]{2, 5});
 
     virtual ~ProgramConfig();
 
@@ -45,7 +45,10 @@ private:
             *pidFilePath,
             *daemonsNames,
             *httpConfigPath,
-            *rs232ConfigPath;
+            *rs232ConfigPath,
+            *offsetDirPath,
+            *configDirPath,
+            *dataDirPath;
 
     const unsigned int *daemonsSleepTimes;
 

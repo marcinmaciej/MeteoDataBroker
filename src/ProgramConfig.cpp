@@ -12,6 +12,9 @@ ProgramConfig::ProgramConfig(const unsigned int *sleepTimes)
     this->daemonsNames = new string[2]{"rs232d", "httpd"};
     this->appName = new string("meteo-station");
     this->pidFilePath = new string("/etc/meteo-station/");
+    this->offsetDirPath = new string("/etc/meteo-station/offset");
+    this->configDirPath = new string("/etc/meteo-station/config");
+    this->dataDirPath = new string("/var/meteo-data");
     this->offsetFilePath = new string("/etc/meteo-station/offset/.seek.offset");
     this->httpConfigPath = new string("/etc/meteo-station/config/http.config");
     this->rs232ConfigPath = new string("/etc/meteo-station/config/rs232.config");
