@@ -2,7 +2,6 @@
 // Created by marcin on 06.04.18.
 //
 
-#include <fcntl.h>
 #include "ConfigManager.h"
 
 void serialSetPort(ConfigManager &manager, const string &paramVal)
@@ -105,6 +104,7 @@ ConfigManager::ConfigManager()
 
     if (!this->loadSerialPort(*this->programConfig->getRs232ConfigPath()))
     {
+        this->makeAllPaths();
         this->setDefaultSerial();
     }
 
@@ -249,9 +249,8 @@ bool ConfigManager::getParams(const string &path) const
                 paramName;
 
         string::size_type bPos = 0,
-                ePos = 0;
-
-        string::size_type length = 0;
+                ePos = 0,
+                length = 0;
 
         params = loadParams(path);
 
@@ -337,6 +336,19 @@ const char *ConfigManager::loadParams(const string &path) const
     }
 
     return line;
+}
+
+void ConfigManager::makeDir(const string &path)
+{
+    mkdir(path.c_str(), 0744);
+}
+
+void ConfigManager::makeAllPaths()
+{
+    this->makeDir(*this->programConfig->getPidFileDirPath());
+    this->makeDir(*this->programConfig->getConfigDirPath());
+    this->makeDir(*this->programConfig->getOffsetDirPath());
+    this->makeDir(*this->programConfig->getDataDirPath());
 }
 
 ConfigManager::~ConfigManager()

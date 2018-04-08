@@ -12,7 +12,8 @@
 #include <map>
 #include <iterator>
 #include <algorithm>
-
+#include <fcntl.h>
+#include <sys/stat.h>
 
 class ConfigManager
 {
@@ -43,6 +44,10 @@ private:
     const char *getDefaultSerialToSave();
 
     const char *getDefaultHttpToSave();
+
+    void makeAllPaths();
+
+    void makeDir(const string & path);
 
     void setDefaultSerial();
 
