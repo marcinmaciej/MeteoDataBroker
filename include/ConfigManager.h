@@ -11,6 +11,7 @@
 #include "MeteoLog.h"
 #include <map>
 #include <iterator>
+#include <algorithm>
 
 
 class ConfigManager
@@ -37,7 +38,7 @@ private:
 
     const char *ENDDELIMITER = "\r\n";
 
-    const char *loadParams(const string & path) const;
+    const char *loadParams(const string &path) const;
 
     const char *getDefaultSerialToSave();
 
@@ -51,13 +52,14 @@ private:
 
     void saveDefaultHttp();
 
-    bool loadSerialPort(const string & path);
+    bool loadSerialPort(const string &path);
 
-    bool loadHttp(const string & path);
+    bool loadHttp(const string &path);
 
-    bool getParams(const string & path) const;
+    bool getParams(const string &path) const;
 
-    void substringParams(const string *params, basic_string::size_type *bPos, const basic_string::size_type *ePos, string *paramValue, string *paramName) const;
+    void substringParams(string *params, string::size_type *bPos, const string::size_type *ePos, string *paramValue,
+                         string *paramName) const;
 };
 
 

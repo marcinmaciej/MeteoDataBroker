@@ -246,10 +246,10 @@ bool ConfigManager::getParams(const string &path) const
                 paramValue,
                 paramName;
 
-        basic_string::size_type bPos = 0,
-                ePos = 0,
+        string::size_type bPos = 0,
+                ePos = 0;
 
-                length = 0;
+        string::size_type length = 0;
 
         params = loadParams(path);
 
@@ -282,7 +282,7 @@ bool ConfigManager::getParams(const string &path) const
 }
 
 void
-ConfigManager::substringParams(const string *params, basic_string::size_type *bPos, const basic_string::size_type *ePos,
+ConfigManager::substringParams(string *params, string::size_type *bPos, const string::size_type *ePos,
                                string *paramValue,
                                string *paramName) const
 {
@@ -300,7 +300,7 @@ ConfigManager::substringParams(const string *params, basic_string::size_type *bP
     *bPos += *ePos;
 
     transform(paramName->begin(), paramName->end(), paramName->begin(),
-              tolower); /* Change all letters to lower */
+              ::tolower); /* Change all letters to lower */
 }
 
 bool ConfigManager::loadHttp(const string &path)
