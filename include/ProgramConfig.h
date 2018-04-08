@@ -12,7 +12,7 @@ using namespace std;
 class ProgramConfig
 {
 public:
-    ProgramConfig(const unsigned int *sleepTimes);
+    explicit ProgramConfig(const unsigned int *sleepTimes = new unsigned int[2]{2,5});
 
     virtual ~ProgramConfig();
 
