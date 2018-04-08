@@ -82,7 +82,7 @@ ConfigManager::ConfigManager()
     this->setParams.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("flowcontrol", serialSetFlowControl));
 
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("kdkdk", httpSetHostIp));
+    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostip", httpSetHostIp));
     this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", httpSetHostName));
     this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("speed", httpSetPort));
     this->setParams.insert(
