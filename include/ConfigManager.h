@@ -58,7 +58,7 @@ private:
 
     bool getParams(const string &path) const;
 
-    void substringParams(string *params, string::size_type *bPos, const string::size_type *ePos, string *paramValue,
+    void substringParams(const string *params, string::size_type *bPos, const string::size_type *ePos, string *paramValue,
                          string *paramName) const;
 };
 

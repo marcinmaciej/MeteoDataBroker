@@ -72,6 +72,7 @@ void httpSetRequest(ConfigManager &manager, const string &paramVal)
 
 ConfigManager::ConfigManager()
 {
+    /* map serial port params */
     this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", serialSetPort));
     this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("speed", serialSetSpeed));
     this->setParams.insert(
@@ -82,16 +83,17 @@ ConfigManager::ConfigManager()
     this->setParams.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("flowcontrol", serialSetFlowControl));
 
+    /* map http connection params */
     this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostip", httpSetHostIp));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", httpSetHostName));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("speed", httpSetPort));
+    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostname", httpSetHostName));
+    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", httpSetPort));
     this->setParams.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("databits", httpSetAddressFamily));
+            pair<string, void (*)(ConfigManager &, const string &)>("addressfamily", httpSetAddressFamily));
     this->setParams.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("stopbits", httpSetSocketType));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("parity", httpSetProtocol));
+            pair<string, void (*)(ConfigManager &, const string &)>("sockettype", httpSetSocketType));
+    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("protocol", httpSetProtocol));
     this->setParams.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("flowcontrol", httpSetRequest));
+            pair<string, void (*)(ConfigManager &, const string &)>("request", httpSetRequest));
 
     this->meteoLog = new MeteoLog("MS-ConfigManager");
 
@@ -282,7 +284,7 @@ bool ConfigManager::getParams(const string &path) const
 }
 
 void
-ConfigManager::substringParams(string *params, string::size_type *bPos, const string::size_type *ePos,
+ConfigManager::substringParams(const string *params, string::size_type *bPos, const string::size_type *ePos,
                                string *paramValue,
                                string *paramName) const
 {
