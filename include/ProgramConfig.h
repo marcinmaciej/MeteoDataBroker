@@ -16,13 +16,13 @@ public:
 
     virtual ~ProgramConfig();
 
-    const string &getAppName() const;
+    const string *getAppName() const;
 
-    const string &getDataFilePath() const;
+    const string *getDataFilePath() const;
 
-    const string &getOffsetFilePath() const;
+    const string *getOffsetFilePath() const;
 
-    const string &getPidFilePath() const;
+    const string *getPidFileDirPath() const;
 
     const string *getDaemonsNames() const;
 
@@ -31,6 +31,13 @@ public:
     const string *getHttpConfigPath() const;
 
     const string *getRs232ConfigPath() const;
+
+    const string *getOffsetDirPath() const;
+
+    const string *getConfigDirPath() const;
+
+    const string *getDataDirPath() const;
+
 
     void setHttpConfigPath(const string *httpConfigPath);
 
@@ -42,7 +49,7 @@ private:
     const string *appName,
             *dataFilePath,
             *offsetFilePath,
-            *pidFilePath,
+            *pidFileDirPath,
             *daemonsNames,
             *httpConfigPath,
             *rs232ConfigPath,

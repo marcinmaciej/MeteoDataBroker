@@ -11,7 +11,7 @@ ProgramConfig::ProgramConfig(const unsigned int *sleepTimes)
     this->daemonsSleepTimes = sleepTimes;
     this->daemonsNames = new string[2]{"rs232d", "httpd"};
     this->appName = new string("meteo-station");
-    this->pidFilePath = new string("/etc/meteo-station/");
+    this->pidFileDirPath = new string("/etc/meteo-station/");
     this->offsetDirPath = new string("/etc/meteo-station/offset");
     this->configDirPath = new string("/etc/meteo-station/config");
     this->dataDirPath = new string("/var/meteo-data");
@@ -22,24 +22,39 @@ ProgramConfig::ProgramConfig(const unsigned int *sleepTimes)
 
 }
 
-const string &ProgramConfig::getAppName() const
+const string *ProgramConfig::getOffsetDirPath() const
 {
-    return *this->appName;
+    return this->offsetDirPath;
 }
 
-const string &ProgramConfig::getDataFilePath() const
+const string *ProgramConfig::getConfigDirPath() const
 {
-    return *this->dataFilePath;
+    return this->configDirPath;
 }
 
-const string &ProgramConfig::getOffsetFilePath() const
+const string *ProgramConfig::getDataDirPath() const
 {
-    return *this->offsetFilePath;
+    return this->dataDirPath;
 }
 
-const string &ProgramConfig::getPidFilePath() const
+const string *ProgramConfig::getAppName() const
 {
-    return *this->pidFilePath;
+    return this->appName;
+}
+
+const string *ProgramConfig::getDataFilePath() const
+{
+    return this->dataFilePath;
+}
+
+const string *ProgramConfig::getOffsetFilePath() const
+{
+    return this->offsetFilePath;
+}
+
+const string *ProgramConfig::getPidFileDirPath() const
+{
+    return this->pidFileDirPath;
 }
 
 const string *ProgramConfig::getDaemonsNames() const
@@ -82,7 +97,7 @@ ProgramConfig::~ProgramConfig()
     delete this->daemonsNames;
     delete this->daemonsSleepTimes;
     delete this->daemonsSleepTimes;
-    delete this->pidFilePath;
+    delete this->pidFileDirPath;
     delete this->offsetFilePath;
     delete this->dataFilePath;
     delete this->appName;
