@@ -73,26 +73,26 @@ void httpSetRequest(ConfigManager &manager, const string &paramVal)
 ConfigManager::ConfigManager()
 {
     /* map serial port params */
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", serialSetPort));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("speed", serialSetSpeed));
-    this->setParams.insert(
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", serialSetPort));
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("speed", serialSetSpeed));
+    this->mapParamToMethod.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("databits", serialSetDataBits));
-    this->setParams.insert(
+    this->mapParamToMethod.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("stopbits", serialSetStopBits));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("parity", serialSetParity));
-    this->setParams.insert(
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("parity", serialSetParity));
+    this->mapParamToMethod.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("flowcontrol", serialSetFlowControl));
 
     /* map http connection params */
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostip", httpSetHostIp));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostname", httpSetHostName));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", httpSetPort));
-    this->setParams.insert(
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostip", httpSetHostIp));
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostname", httpSetHostName));
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", httpSetPort));
+    this->mapParamToMethod.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("addressfamily", httpSetAddressFamily));
-    this->setParams.insert(
+    this->mapParamToMethod.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("sockettype", httpSetSocketType));
-    this->setParams.insert(pair<string, void (*)(ConfigManager &, const string &)>("protocol", httpSetProtocol));
-    this->setParams.insert(
+    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("protocol", httpSetProtocol));
+    this->mapParamToMethod.insert(
             pair<string, void (*)(ConfigManager &, const string &)>("request", httpSetRequest));
 
     this->meteoLog = new MeteoLog("MS-ConfigManager");
@@ -266,13 +266,13 @@ bool ConfigManager::getParams(const string &path) const
         {
             substringParams(&params, &bPos, &ePos, &paramValue, &paramName);
 
-            setParams.find(paramName)->second(manager, paramValue);
+            mapParamToMethod.find(paramName)->second(manager, paramValue);
         }
 
         /* Get last param behind the last comma */
         substringParams(&params, &bPos, &length, &paramValue, &paramName);
 
-        setParams.find(paramName)->second(manager, paramValue);
+        mapParamToMethod.find(paramName)->second(manager, paramValue);
 
         return true;
         //temp = temp.erase(temp.find_first_of(ENDDELIMITER));

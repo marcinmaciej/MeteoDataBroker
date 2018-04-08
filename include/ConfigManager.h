@@ -29,7 +29,7 @@ public:
 
 private:
 
-    map<string, void (*)(ConfigManager &, const string &)> setParams;
+    map<string, void (*)(ConfigManager &, const string &)> mapParamToMethod;
 
     MeteoLog *meteoLog;
 
