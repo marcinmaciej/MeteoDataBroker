@@ -23,4 +23,4 @@ add_executable(meteo-station
         src/MyDaemon.cpp
         src/Rs232Task.cpp
         src/Task.cpp
-        main.cpp)
+        main.cpp src/SerialPort.cpp include/SerialPort.h src/ConnectionConfig.cpp include/HttpConnection.h src/ConfigManager.cpp include/ConfigManager.h src/ProgramConfig.cpp include/ProgramConfig.h)
