@@ -1,3 +1,7 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef MYDAEMON_H
 #define MYDAEMON_H
 
@@ -14,16 +18,14 @@ class MyDaemon
 {
 public:
 
-    MyDaemon(unsigned int sleepTime, Task *task, const string &daemonName, const string &path);
+    explicit MyDaemon(Task *task, const string &daemonName, const string &path);
 
     ~MyDaemon();
 
-    pid_t getSid() const;
+    const pid_t getSid() const;
 
 
 private:
-
-    unsigned int sleepTime;
 
     Task *task;
 
@@ -32,13 +34,11 @@ private:
     string pidFilePath,
             daemonName;
 
-    MeteoLog *meteoLog;
+    MyLog *meteoLog;
 
     int pidFileDescriptor;
 
-    int getPidFileDesc() const;
-
-    unsigned int getSleepTime() const;
+    const int getPidFileDesc() const;
 
     void setPidFileDesc(int pidFileDescriptor);
 

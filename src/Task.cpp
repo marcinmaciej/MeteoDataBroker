@@ -1,8 +1,15 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #include "Task.h"
 
-Task::Task()
+Task::Task(const ConfigManager * configManager)
 {
-    this->logName = "MS-TaskName";
-    this->meteoLog = new MeteoLog(this->logName);
+    this->configManager = configManager;
+    this->logName = new char[1024];
+    this->logName = this->configManager->programConfig->getAppName().c_str();
+    this->meteoLog = new MyLog(this->logName);
+
 }
 

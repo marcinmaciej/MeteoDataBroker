@@ -1,10 +1,13 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #include "MyDaemon.h"
 
 
-MyDaemon::MyDaemon(unsigned int sleepTime, Task *task, const string &daemonName, const string &path)
+MyDaemon::MyDaemon(Task *task, const string &daemonName, const string &path)
 {
     this->task = task;
-    this->sleepTime = sleepTime;
     this->daemonName = daemonName;
 
     this->pidFilePath = path;
@@ -12,7 +15,7 @@ MyDaemon::MyDaemon(unsigned int sleepTime, Task *task, const string &daemonName,
     this->pidFilePath += this->daemonName;
     this->pidFilePath += ".pid";
 
-    this->meteoLog = new MeteoLog(this->daemonName);
+    this->meteoLog = new MyLog(this->daemonName);
 
     try
     {
@@ -54,14 +57,14 @@ MyDaemon::MyDaemon(unsigned int sleepTime, Task *task, const string &daemonName,
     }
 }
 
-int MyDaemon::getPidFileDesc() const
+const int MyDaemon::getPidFileDesc() const
 {
     return this->pidFileDescriptor;
 }
 
 void MyDaemon::setPidFileDesc(int pidFileDescriptor)
 {
-    MyDaemon::pidFileDescriptor = pidFileDescriptor;
+    this->pidFileDescriptor = pidFileDescriptor;
 }
 
 void MyDaemon::start()
@@ -99,11 +102,9 @@ void MyDaemon::start()
 
         try
         {
-            /* Do some task here ... */
-            this->task->task(this->daemonName.c_str());
 
-            /* And sleep, wait N seconds */
-            sleep(this->getSleepTime());
+                    /* Do some task here ... */
+                    this->task->task(this->daemonName.c_str());
 
         }
         catch (const char *s)
@@ -118,9 +119,10 @@ void MyDaemon::start()
 #pragma clang diagnostic pop
 
     exit(EXIT_SUCCESS);
+
 }
 
-pid_t MyDaemon::getSid() const
+const pid_t MyDaemon::getSid() const
 {
     return this->sid;
 }
@@ -128,11 +130,6 @@ pid_t MyDaemon::getSid() const
 void MyDaemon::setSid(pid_t sid)
 {
     this->sid = sid;
-}
-
-unsigned int MyDaemon::getSleepTime() const
-{
-    return this->sleepTime;
 }
 
 void MyDaemon::exitOnAnotherInstance()

@@ -1,6 +1,6 @@
-//
-// Created by Marcin Guziołek on 06.04.18.
-//
+/** @author  Created by Marcin Guziołek on 06.04.18.
+ *
+ */
 
 #ifndef METEOSTATIONDRIVERS_PROGRAMCONFIG_H
 #define METEOSTATIONDRIVERS_PROGRAMCONFIG_H
@@ -9,12 +9,12 @@
 
 using namespace std;
 
-class ProgramConfig
+class AppConfig
 {
 public:
-    explicit ProgramConfig(const unsigned int *sleepTimes = new unsigned int[2]{2, 5});
+    AppConfig();
 
-    virtual ~ProgramConfig();
+    virtual ~AppConfig();
 
     const string &getAppName() const;
 
@@ -54,15 +54,7 @@ public:
 
     void setDataDirPath(const string &dataDirPath);
 
-    const unsigned int *getDaemonsSleepTimes() const;
-
-    void setDaemonsSleepTimes(const unsigned int *daemonsSleepTimes);
-
     void setDaemonsNames(string *daemonsNames);
-
-    void setDataLength(const size_t *dataLength);
-
-    const size_t * getDataLength() const;
 
 private:
     string appName,
@@ -75,10 +67,6 @@ private:
             offsetDirPath,
             configDirPath,
             dataDirPath;
-
-    const unsigned int *daemonsSleepTimes;
-
-    const size_t *dataLength;
 
 };
 

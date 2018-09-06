@@ -1,10 +1,10 @@
-//
-// Created by Marcin Guziołek on 05.04.18.
-//
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
 
-#include "ConnectionConfig.h"
+#include "HttpConfig.h"
 
-ConnectionConfig::ConnectionConfig()
+HttpConfig::HttpConfig()
 {
     this->setHostIp();
     this->setHostName();
@@ -13,74 +13,107 @@ ConnectionConfig::ConnectionConfig()
     this->setProtocol();
     this->setSocketType();
     this->setRequest();
+    this->setDataLength();
+    this->setSleepTime();
+    this->setWaitNetwork();
 }
 
-const string &ConnectionConfig::getHostName() const
+const string &HttpConfig::getHostName() const
 {
     return this->hostName;
 }
 
-const string &ConnectionConfig::getAddressFamily() const
+const string &HttpConfig::getAddressFamily() const
 {
     return this->addressFamily;
 }
 
-const string &ConnectionConfig::getProtocol() const
+const string &HttpConfig::getProtocol() const
 {
     return this->protocol;
 }
 
-const string &ConnectionConfig::getRequest() const
+const string &HttpConfig::getRequest() const
 {
     return this->request;
 }
 
-const string &ConnectionConfig::getHostIp() const
+const string &HttpConfig::getHostIp() const
 {
     return this->hostIp;
 }
 
-const string &ConnectionConfig::getSocketType() const
+const string &HttpConfig::getSocketType() const
 {
     return this->socketType;
 }
 
-const string &ConnectionConfig::getPort() const
+const string &HttpConfig::getPort() const
 {
     return this->port;
 }
 
-void ConnectionConfig::setHostName(const string &hostName)
+void HttpConfig::setHostName(const string &hostName)
 {
     this->hostName = hostName;
 }
 
-void ConnectionConfig::setSocketType(const string &socketType)
+void HttpConfig::setSocketType(const string &socketType)
 {
     this->socketType = socketType;
 }
 
-void ConnectionConfig::setHostIp(const string &hostIp)
+void HttpConfig::setHostIp(const string &hostIp)
 {
     this->hostIp = hostIp;
 }
 
-void ConnectionConfig::setRequest(const string &request)
+void HttpConfig::setRequest(const string &request)
 {
     this->request = request;
 }
 
-void ConnectionConfig::setProtocol(const string &protocol)
+void HttpConfig::setProtocol(const string &protocol)
 {
     this->protocol = protocol;
 }
 
-void ConnectionConfig::setAddressFamily(const string &addressFamily)
+void HttpConfig::setAddressFamily(const string &addressFamily)
 {
     this->addressFamily = addressFamily;
 }
 
-void ConnectionConfig::setPort(const string &port)
+void HttpConfig::setPort(const string &port)
 {
     this->port = port;
+}
+
+size_t HttpConfig::getDataLength() const
+{
+    return this->dataLength;
+}
+
+void HttpConfig::setDataLength(const string & dataLength)
+{
+    this->dataLength = static_cast<size_t >(stoi(dataLength));
+}
+
+const unsigned int HttpConfig::getSleepTime() const
+{
+    return this->sleepTime;
+}
+
+void HttpConfig::setSleepTime(const string & sleepTime)
+{
+    this->sleepTime = static_cast<unsigned int>(stoi(sleepTime));
+}
+
+const unsigned int HttpConfig::getWaitNetwork() const
+{
+    return this->waitNetwork;
+}
+
+void HttpConfig::setWaitNetwork(const string & waitNetwork)
+{
+    this->waitNetwork = static_cast<unsigned int>(stoi(waitNetwork));
 }

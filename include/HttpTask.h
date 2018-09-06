@@ -1,28 +1,40 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef HTTPTASK_H
 #define HTTPTASK_H
 
-#define TESTING true
+#define SHOW_HTTP true
 
-#include "Task.h"
 
 #include "HttpConnection.h"
 #include "BufferManager.h"
 
+#include "Task.h"
 
 class HttpTask: public Task
 {
 
 public:
-    HttpTask();
+    explicit HttpTask(const ConfigManager * configManager);
     ~HttpTask() override;
 
     void task(const char * logName) override;
 
+
 private:
+
+    size_t bytesToRead;
+
     HttpConnection * http;
     BufferManager * bufferManager;
 
-    const int BYTES_TO_READ = 10;
+    const ConfigManager * getConfigManager();
+
+    const size_t getBytesToRead() const;
+
+    void setBytesToRead(size_t bytesToRead);
 
 };
 

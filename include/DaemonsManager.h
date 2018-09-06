@@ -1,15 +1,22 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef DAEMONSMANAGER_H
 #define DAEMONSMANAGER_H
 
 #include <csignal>
 
+#include "ConfigManager.h"
 #include "MyDaemon.h"
+#include "HttpTask.h"
+#include "SerialTask.h"
 
 class DaemonsManager
 {
 public:
 
-    DaemonsManager();
+    explicit DaemonsManager(ConfigManager * configManager);
 
     ~DaemonsManager();
 
@@ -19,27 +26,30 @@ public:
 
     void killAll();
 
+    void setPidFileDirPath(const string *pidFilePath);
+
+    ConfigManager *getConfigManager() const;
+
+    void setConfigManager(ConfigManager *configManager);
+
 private:
 
     const unsigned char RS232D = 0,
             HTTPD = 1;
 
-    unsigned int *sleepTime;
-
     const string *pidFilePath,
-            *daemonsNames,
-            *FILE_EXT;
+            *daemonsNames;
 
     pid_t *daemonsPids;
 
-    MyDaemon *httpd,
+    ConfigManager * configManager;
+
+    const MyDaemon *httpd,
             *rs232d;
 
-    MeteoLog *meteoLog;
+    MyLog *meteoLog;
 
-    const string getPidFilePath() const;
-
-    unsigned int getSleepTime(unsigned char daemon) const;
+    const string getPidFileDirPath() const;
 
     const string getDaemonName(unsigned char daemon) const;
 
@@ -47,15 +57,13 @@ private:
 
     void setDaemonsNames(const string *daemonsNames);
 
-    void setSleepTime(unsigned int *sleepTime);
-
     void setPid(unsigned char daemon, pid_t pid);
 
     bool isRunning(const pid_t *daemonPid);
 
     void killDaemon(const pid_t *daemonPid);
 
-    void getSavedPid(int daemon);
+    void getSavedPid(unsigned char daemon);
 
     void collectGarbage();
 };

@@ -1,82 +1,83 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef _BUFFERMANAGER_H
 #define _BUFFERMANAGER_H
 
-#define TESTING true
+#define SHOW_BUFFER false
 
-#include <fcntl.h>
-#include <ctime>
 
-#include "MeteoLog.h"
+#include "MyLog.h"
+#include "ConfigManager.h"
+
 
 class BufferManager
 {
 
 public:
 
-    explicit BufferManager(int mode);
+    explicit BufferManager(const int mode, const ConfigManager *configManager);
 
     virtual ~BufferManager();
 
-    const char * getBuffer();
+    const char *readBuffer() ;
 
-    void readBuffer();
-
-    void writeBuffer(const char * data);
+    void writeBuffer(const char *data);
 
     void updateOffset(off_t offset);
 
+    void closeBuffer();
 
 private:
 
-    const char * BUFFER_DIR =  "/var/meteo-data/meteo.data",
-                /* * BUFFER_FILE_NAME =  "", */
-                   * OFFSET_PATH=  "/etc/meteo-station/offset/seek.offset";
+    const char *offsetPath,
+            *bufferPath;
 
-    string * buffer = new string();
-
-    /*
-     * char * buffer_path = new char[2048];
-     * string currentDate;
-     */
-
-    const size_t BYTES_TO_READ = 10;
+    size_t bytesNumToRead;
 
     int buffFileDesc,
-        offsetFileDesc;
+            offsetFileDesc;
 
     off_t seekOffset;
 
-    MeteoLog * meteoLog;
+    MyLog *meteoLog;
 
-    /* Private methods */
 
-    /* Getters for buffer */
-    /*
-     * string getCurrentDate();
-     */
-    int getBuffFileDesc();
-    const char * getBufferFilePath();
+    size_t getBytesNumToRead() const;
 
-    /* Getters for seek offset */
-    off_t getOffset();
-    int getOffsetFileDesc();
-    const char * getOffsetFilePath();
+    int getBuffFileDesc() const;
 
-    /* Setters for buffer */
-    /*
-     * void setCurrentDate();
-     * void setBuffFilePath();
-     */
+    const char *getBufferFilePath() const;
+
+    off_t getOffset() const;
+
+    int getOffsetFileDesc() const;
+
+    const char *getOffsetFilePath() const;
+
+    void setOffsetFilePath(const char *offsetPath);
+
+    void setBufferFilePath(const char *bufferPath);
+
+    void setBytesNumToRead(size_t bytesNumToRead);
+
+    void setOffsetFileDesc(int fd);
+
     void setBuffFileDesc(int fd);
+
     void openBuffer(int mode);
 
-    /* Setters for seek offset */
-    void setOffsetFileDesc(int fd);
     void loadOffset();
-    void moveOffset();
+
+    void moveOffset() const;
+
     void setOffset(off_t offset);
+
     void saveOffset(off_t offset);
+
     void openOffsetFile(int mode);
 
 };
+
 #endif

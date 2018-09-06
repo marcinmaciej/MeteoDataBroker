@@ -1,10 +1,10 @@
-//
-// Created by Marcin Guziołek on 04.04.18.
-//
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
 
-#include "Rs232Config.h"
+#include "SerialConfig.h"
 
-Rs232Config::Rs232Config()
+SerialConfig::SerialConfig()
 {
     this->setPort();
     this->setSpeed();
@@ -12,64 +12,87 @@ Rs232Config::Rs232Config()
     this->setParity();
     this->setDataBits();
     this->setStopBits();
+    this->setSleepTime();
+    this->setDataLength();
 }
 
-void Rs232Config::setPort(const string &serialPort)
+void SerialConfig::setPort(const string &serialPort)
 {
     this->serialPort = serialPort;
 }
 
-void Rs232Config::setParity(const string &parity)
+void SerialConfig::setParity(const string &parity)
 {
     this->parity = parity;
 }
 
-void Rs232Config::setFlowControl(const string &flowControl)
+void SerialConfig::setFlowControl(const string &flowControl)
 {
     this->flowControl = flowControl;
 }
 
-void Rs232Config::setSpeed(const string & speed)
+void SerialConfig::setSpeed(const string & speed)
 {
     this->speed = speed;
 }
 
-void Rs232Config::setDataBits(const string & dataBits)
+void SerialConfig::setDataBits(const string & dataBits)
 {
     this->dataBits = dataBits;
 }
 
-void Rs232Config::setStopBits(const string & stopBits)
+void SerialConfig::setStopBits(const string & stopBits)
 {
     this->stopBits = stopBits;
 }
 
-const string &Rs232Config::getPort() const
+const string &SerialConfig::getPort() const
 {
     return this->serialPort;
 }
 
-const string &Rs232Config::getParity() const
+const string &SerialConfig::getParity() const
 {
     return this->parity;
 }
 
-const string &Rs232Config::getFlowControl() const
+const string &SerialConfig::getFlowControl() const
 {
     return this->flowControl;
 }
 
-const string & Rs232Config::getSpeed() const
+const string & SerialConfig::getSpeed() const
 {
     return this->speed;
 }
 
-const string & Rs232Config::getDataBits() const
+const string & SerialConfig::getDataBits() const
 {
     return this->dataBits;
 }
 
-const string &Rs232Config::getStopBits() const
+const string &SerialConfig::getStopBits() const
 {
     return this->stopBits;
 }
+
+const size_t SerialConfig::getDataLength() const
+{
+    return this->dataLength;
+}
+
+void SerialConfig::setDataLength(const string &dataLength)
+{
+    this->dataLength = static_cast<size_t >(stoi(dataLength));
+}
+
+const unsigned int SerialConfig::getSleepTime() const
+{
+    return this->sleepTime;
+}
+
+void SerialConfig::setSleepTime(const string &sleepTime)
+{
+    this->sleepTime = static_cast<unsigned int>(stoi(sleepTime));
+}
+

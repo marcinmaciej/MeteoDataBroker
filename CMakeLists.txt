@@ -11,16 +11,16 @@ add_executable(meteo-station
         include/DaemonsManager.h
         include/HttpConnection.h
         include/HttpTask.h
-        include/MeteoLog.h
+        include/MyLog.h
         include/MyDaemon.h
-        include/Rs232Task.h
+        include/SerialTask.h
         include/Task.h
         src/BufferManager.cpp
         src/DaemonsManager.cpp
         src/HttpConnection.cpp
         src/HttpTask.cpp
-        src/MeteoLog.cpp
+        src/MyLog.cpp
         src/MyDaemon.cpp
-        src/Rs232Task.cpp
+        src/SerialTask.cpp
         src/Task.cpp
-        main.cpp src/SerialPort.cpp include/SerialPort.h src/ConnectionConfig.cpp include/HttpConnection.h src/ConfigManager.cpp include/ConfigManager.h src/ProgramConfig.cpp include/ProgramConfig.h)
+        main.cpp src/SerialConfig.cpp include/SerialConfig.h src/HttpConfig.cpp include/HttpConfig.h src/ConfigManager.cpp include/ConfigManager.h src/AppConfig.cpp include/AppConfig.h)

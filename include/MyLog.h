@@ -1,3 +1,7 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef METEOLOG_H
 #define METEOLOG_H
 
@@ -11,12 +15,12 @@
 
 using namespace std;
 
-class MeteoLog
+class MyLog
 {
 
 public:
-    explicit MeteoLog(string ident = "MeteoStationLog");
-    ~MeteoLog() = default;
+    explicit MyLog(string ident = "MeteoStationLog");
+    ~MyLog() = default;
 
     void info(const char * msg);
     void notice(const char * msg);
@@ -26,7 +30,7 @@ public:
 
 private:
 
-    const char * ident;
+    string ident;
 
     int facility,
         levels[8],

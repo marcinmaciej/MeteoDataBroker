@@ -1,6 +1,6 @@
-//
-// Created by Marcin Guziołek on 05.04.18.
-//
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
 
 #ifndef METEOSTATIONDRIVERS_CONNECTIONCONFIG_H
 #define METEOSTATIONDRIVERS_CONNECTIONCONFIG_H
@@ -9,13 +9,13 @@
 
 using namespace std;
 
-class ConnectionConfig
+class HttpConfig
 {
 
 public:
-    ConnectionConfig();
+    HttpConfig();
 
-    virtual ~ConnectionConfig() = default;
+    virtual ~HttpConfig() = default;
 
     const string &getPort() const;
 
@@ -32,6 +32,12 @@ public:
     const string &getAddressFamily() const;
 
 
+    size_t getDataLength() const;
+
+    const unsigned int getSleepTime() const;
+
+    const unsigned int getWaitNetwork() const;
+
     void setHostIp(const string &hostIp = "127.0.0.1");
 
     void setHostName(const string &hostName = "localhost");
@@ -44,8 +50,14 @@ public:
 
     void setProtocol(const string &protocol = "none");
 
-    void setRequest(const string &request = "POST /index.html HTTP/1.1\r\nHost:localhost\r\nContent-Type:application/x-www-form-urlencoded;charset=utf-8\r\nContent-Length:#####\r\nConnection:close\r\n\r\ndata=");
+    void setRequest(
+            const string &request = "POST /index.html HTTP/1.1\r\nHost:localhost\r\nContent-Type:application/x-www-form-urlencoded;charset=utf-8\r\nContent-Length:#####\r\nConnection:close\r\n\r\ndata=");
 
+    void setDataLength(const string & dataLength = "1024");
+
+    void setSleepTime(const string & sleepTime = "5");
+
+    void setWaitNetwork(const string & waitNetwork = "30");
 
 private:
     string hostName,
@@ -55,6 +67,11 @@ private:
             protocol,
             request,
             port;
+
+    size_t dataLength;
+
+    unsigned int sleepTime,
+            waitNetwork;
 
 };
 

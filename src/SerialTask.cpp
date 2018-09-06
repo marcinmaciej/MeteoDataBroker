@@ -1,17 +1,20 @@
-#include "Rs232Task.h"
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
 
-Rs232Task::Rs232Task(const ConfigManager *configManager) : Task(configManager)
+#include "SerialTask.h"
+
+SerialTask::SerialTask(const ConfigManager *configManager) : Task(configManager)
 {
 
     Task::logName = "MS-RS232TaskClass";
 
     Task::meteoLog = new MyLog("MS-RS232TaskClass");
 
-    this->setSerialPortPath(this->configManager->serialPort->getPort().c_str());
+    this->setSerialPortPath(this->configManager->serialConfig->getPort().c_str());
 
-    this->setBytesNumToRead(this->configManager->programConfig->getDataLength());
+    this->setBytesNumToRead(this->configManager->serialConfig->getDataLength());
 
-    this->buffer = new char[this->getBytesNumToRead() + 1];
 
     this->mapDataBits.insert(pair<const string, int>("5", CS5));
     this->mapDataBits.insert(pair<const string, int>("6", CS6));
@@ -38,14 +41,18 @@ Rs232Task::Rs232Task(const ConfigManager *configManager) : Task(configManager)
     this->mapSpeed.insert(pair<const string, speed_t>("115200", B115200));
 
 
+
+    /* Open port */
+    this->openPort();
 }
 
-const ConfigManager *Rs232Task::getConfigManager() const
+const ConfigManager *SerialTask::getConfigManager() const
 {
+
     return this->configManager;
 }
 
-void Rs232Task::task(const char *logName)
+void SerialTask::task(const char *logName)
 {
     try
     {
@@ -53,15 +60,10 @@ void Rs232Task::task(const char *logName)
         /* Set port configuration to read */
         this->setPortConfig();
 
-        auto *readData = new string();
+        /* Read from port */
+        auto *readData = new string(this->readPort());
 
         this->bufferManager = new BufferManager(O_WRONLY | O_CREAT | O_APPEND, this->getConfigManager());
-
-        /* Read from port */
-        this->readPort();
-
-
-        *readData = this->buffer;
 
         if (!readData->empty())
         {
@@ -69,12 +71,12 @@ void Rs232Task::task(const char *logName)
             this->bufferManager->writeBuffer(readData->c_str());
         }
 
+        this->bufferManager->closeBuffer();
+
         delete readData;
 
-    }
-    catch (const char *s)
-    {
-        this->meteoLog->err(s);
+        sleep(this->getConfigManager()->serialConfig->getSleepTime());
+
     }
     catch (...)
     {
@@ -82,65 +84,63 @@ void Rs232Task::task(const char *logName)
     }
 }
 
-void Rs232Task::readPort()
+const char * SerialTask::readPort()
 {
 
     try
     {
+        ssize_t bytesRead = 0;
+        size_t len = this->getBytesNumToRead();
+        auto *buf = new char[len + 1]();
 
-
-#if TESTING
+#if SHOW_SERIAL
         ioctl(this->getFileDesc(), FIONREAD, &this->bytesAvailable);
         string ms("Bytes available = ");
         ms += to_string(this->bytesAvailable);
         this->meteoLog->warn(ms.c_str());
-#endif // TESTING
+#endif // SHOW_SERIAL
 
-        if (read(this->getFileDesc(), this->buffer, this->getBytesNumToRead()) < 0)
+        bytesRead = read(this->getFileDesc(), buf, len);
+
+        if (bytesRead < 0)
         {
             throw errno;
         }
 
-#if TESTING
+#if SHOW_SERIAL
         ms.clear();
         ms = "Content read from port = ";
-        ms += this->buffer;
+        ms += buf;
         this->meteoLog->warn(ms.c_str());
-#endif
-
-    }
-    catch (const char *s)
-    {
-        this->meteoLog->err(s);
+#endif // SHOW_SERIAL
+        return buf;
     }
     catch (...)
     {
         this->meteoLog->err(strerror(errno));
+        return "";
     }
 }
 
-void Rs232Task::closePort()
+void SerialTask::closePort()
 {
     close(this->fileDescriptor);
 }
 
-int Rs232Task::getFileDesc()
+int SerialTask::getFileDesc()
 {
     return this->fileDescriptor;
 }
 
-void Rs232Task::setFileDesc(int fd)
+void SerialTask::setFileDesc(int fd)
 {
     this->fileDescriptor = fd;
 }
 
-void Rs232Task::setPortConfig()
+void SerialTask::setPortConfig()
 {
     try
     {
-
-        /* Open port */
-        this->openPort();
 
         /* Get current settings for port */
         tcgetattr(this->getFileDesc(), &this->options);
@@ -166,12 +166,8 @@ void Rs232Task::setPortConfig()
         tcsetattr(this->getFileDesc(), TCSANOW, &this->options);
 
         /* Set non blocking reading from port */
-        //fcntl(this->getFileDesc(), F_SETFL, FNDELAY);
+        fcntl(this->getFileDesc(), F_SETFL, FNDELAY);
 
-    }
-    catch (const char *s)
-    {
-        this->meteoLog->err(s);
     }
     catch (...)
     {
@@ -181,20 +177,20 @@ void Rs232Task::setPortConfig()
 }
 
 
-void Rs232Task::setPortSpeed()
+void SerialTask::setPortSpeed()
 {
     /* Set baud rate */
-    cfsetispeed(&this->options, mapSpeed.find(this->getConfigManager()->serialPort->getSpeed())->second);
+    cfsetispeed(&this->options, mapSpeed.find(this->getConfigManager()->serialConfig->getSpeed())->second);
 }
 
-void Rs232Task::setPortReadMin()
+void SerialTask::setPortReadMin()
 {
-    /* Set blocking read until MIN number bytes are available and returns up to number of bytes requested */
-    this->options.c_cc[VMIN] = static_cast<cc_t>(this->getBytesNumToRead());
+    /* Set blocking read until MIN number bytes are available */
+    this->options.c_cc[VMIN] = 0;
     this->options.c_cc[VTIME] = 0;
 }
 
-void Rs232Task::setPortNoMappingChars()
+void SerialTask::setPortNoMappingChars()
 {
     /* Set input options by modifying c_iflag by turning off mapping of characters */
     this->options.c_iflag &= ~(INPCK | INLCR | ICRNL | IGNCR);
@@ -202,7 +198,7 @@ void Rs232Task::setPortNoMappingChars()
     this->options.c_iflag |= IGNBRK;
 }
 
-void Rs232Task::setPortRawInput()
+void SerialTask::setPortRawInput()
 {
     /* Set local options by modifying c_lflag to raw input */
     this->options.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN);
@@ -211,17 +207,17 @@ void Rs232Task::setPortRawInput()
     this->options.c_oflag &= ~OPOST;
 }
 
-void Rs232Task::setPortDataBits()
+void SerialTask::setPortDataBits()
 {
     this->options.c_cflag &= ~CSIZE;
     this->options.c_cflag |= CREAD;
-    this->options.c_cflag |= mapDataBits.find(this->getConfigManager()->serialPort->getDataBits())->second;
+    this->options.c_cflag |= mapDataBits.find(this->getConfigManager()->serialConfig->getDataBits())->second;
     this->options.c_cflag |= CLOCAL;
 }
 
-void Rs232Task::setPortFlowControl()
+void SerialTask::setPortFlowControl()
 {
-    string temp = this->getConfigManager()->serialPort->getFlowControl();
+    string temp = this->getConfigManager()->serialConfig->getFlowControl();
     /* Change all letters to lower */
     transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 
@@ -243,9 +239,9 @@ void Rs232Task::setPortFlowControl()
     }
 }
 
-void Rs232Task::setPortParity()
+void SerialTask::setPortParity()
 {
-    string temp = this->getConfigManager()->serialPort->getParity();
+    string temp = this->getConfigManager()->serialConfig->getParity();
     /* Change all letters to lower */
     transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 
@@ -267,9 +263,9 @@ void Rs232Task::setPortParity()
     }
 }
 
-void Rs232Task::setPortStopBits()
+void SerialTask::setPortStopBits()
 {
-    string temp = this->getConfigManager()->serialPort->getStopBits();
+    string temp = this->getConfigManager()->serialConfig->getStopBits();
 
     if (temp == "1")
     {
@@ -282,12 +278,12 @@ void Rs232Task::setPortStopBits()
     }
 }
 
-void Rs232Task::openPort()
+void SerialTask::openPort()
 {
     /* Open port for blocking reading */
     /* Add O_NDELAY or O_NONBLOCK for nonblocking mode */
-this->meteoLog->err(this->getSerialPortPath());
-    this->setFileDesc(open(this->getSerialPortPath(), O_RDONLY | O_NOCTTY));
+    this->meteoLog->err(this->getSerialPortPath());
+    this->setFileDesc(open(this->getSerialPortPath(), O_RDONLY | O_NOCTTY | O_NDELAY));
 
 
     if (this->getFileDesc() < 0)
@@ -296,7 +292,7 @@ this->meteoLog->err(this->getSerialPortPath());
     }
 }
 
-Rs232Task::~Rs232Task()
+SerialTask::~SerialTask()
 {
     this->closePort();
 
@@ -307,22 +303,22 @@ Rs232Task::~Rs232Task()
     delete this->meteoLog;
 }
 
-const char *Rs232Task::getSerialPortPath() const
+const char *SerialTask::getSerialPortPath() const
 {
     return this->serialPortPath;
 }
 
-void Rs232Task::setSerialPortPath(const char *serialPortPath)
+void SerialTask::setSerialPortPath(const char *serialPortPath)
 {
     this->serialPortPath = serialPortPath;
 }
 
-const size_t Rs232Task::getBytesNumToRead() const
+const size_t SerialTask::getBytesNumToRead() const
 {
-    return *this->bytesNumToRead;
+    return this->bytesNumToRead;
 }
 
-void Rs232Task::setBytesNumToRead(const size_t *bytesNumToRead)
+void SerialTask::setBytesNumToRead(const size_t bytesNumToRead)
 {
     this->bytesNumToRead = bytesNumToRead;
 }

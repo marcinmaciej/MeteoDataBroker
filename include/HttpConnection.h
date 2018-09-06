@@ -1,3 +1,7 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef HTTPCONNECTION_H
 #define HTTPCONNECTION_H
 
@@ -5,8 +9,9 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
+#include "MyLog.h"
+#include "ConfigManager.h"
 
-#include "MeteoLog.h"
 
 using namespace std;
 
@@ -15,100 +20,103 @@ class HttpConnection
 {
 
 public:
-    HttpConnection();
+    explicit HttpConnection(const ConfigManager *configManager);
+
     ~HttpConnection();
 
     int httpConnect();
-    bool sendData(const char * data);
+
+    bool sendData(const char *data);
+
+    void httpClose();
 
 private:
 
-    MeteoLog * meteoLog;
+    MyLog *meteoLog;
 
-    struct addrinfo * hints;
+    struct addrinfo *hints;
 
-    const char  * hostName,
-          * hostIp,
-          * port,
-          * configPath,
-          * requestPath;
-
-    const unsigned short LENGTH = 1025;
+    const string *hostName,
+            *hostIp,
+            *port;
 
     int socketDescriptor = -1,
-        socketType,
-        protocol,
-        flags,
-        family;
+            socketType,
+            protocol,
+            flags,
+            family;
 
     string request;
 
+    size_t bytesToSend;
+
     /* Class private methods */
-
-    int getSocketDescriptor();
-
-    int getSocketType();
-    int getAddressFamily();
-    int getProtocol();
-    int getFlags();
-
-    unsigned short getRequestLength();
-
-    struct addrinfo * getHints();
-
-    const char * getRequest();
-    const char * getHostName();
-    const char * getHostIp();
-    const char * getPort();
-    const char * getConfigPath();
-    const char * getRequestPath();
 
 
     /* Parameters of function: getaddrinfo */
 
-    /* Set parameters from config file*/
-    void setHostIp(const char * hostIp = "95.211.144.65");
-    void setHostName(const char * hostName = "www.meteo-station.cba.pl");
-    void setPort(const char * port = "80");
 
     /* Parameter returned by socket function */
-    void setSocketDescriptor(int descriptor);
+
 
     /* Sets hints */
     void setHints();
 
     /* Internally set parameter */
-    /* Require numeric address to avoid potential lengthy lookup calls */
+    /* Require numeric address to avoid potential lengthy lookup calls  */
+
     void setFlags(int flags = AI_NUMERICHOST);
+
+    int getFlags() const;
 
     /* Socket parameters */
 
-    /* Set parameters from config file*/
-    void setAddressFamily(string family = "both");
-    void setSocketType(string type = "tcp");
-    void setProtocol(string protocol = "none");
+
+    addrinfo *getHints() const;
+
+    const char *getHostName() const;
+
+    const char *getHostIp() const;
+
+    const char *getPort() const;
+
+    int getSocketType() const;
+
+    int getProtocol() const;
+
+    int getAddressFamily() const;
+
+    const string &getRequest() const;
+
+    int getSocketDescriptor() const;
+
+    void setAddressFamily(string family);
+
+    void setHostName(const char *hostName);
+
+    void setHostIp(const char *hostIp);
+
+    void setPort(const char *port);
+
+    void setSocketDescriptor(int socketDescriptor);
+
+    void setSocketType(string socketType);
+
+    void setProtocol(string protocol);
+
+    void setRequest(const string &request);
 
     /* Set http request and data for it */
-    void setRequest(string data);
-
-    /* Set file path for loading configuration of socket connection. */
-    void setConfigPath(const char * path = "/etc/meteo-station/config/config.http");
-
-    /* Set file path for loading http request. */
-    void setRequestPath(const char * path = "/etc/meteo-station/config/request.http");
-
-
-    /* load from file configuration of socket connection */
-    void loadConfig();
-
-    /* load from file http request */
-    string loadRequest();
-
-    char * trim(const char * str);
+    const char *mergeRequestAndData(string data);
 
     void createSocket(int ai_family);
 
+    size_t getBytesToSend();
+
+    void setBytesToSend(size_t bytesToSend);
+
     /* void collectGarbage(); */
+
 };
 
 #endif // HTTPCONNECTION_H

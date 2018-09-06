@@ -1,15 +1,20 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #ifndef TASK_H
 #define TASK_H
 
 #include <termios.h> /* termios structure */
 #include <sys/ioctl.h>
+#include "MyLog.h"
+#include "ConfigManager.h"
 
-#include "MeteoLog.h"
 
 class Task
 {
 	public:
-		Task();
+		Task(const ConfigManager * configManager);
         virtual ~Task() = default;
 
 
@@ -17,7 +22,8 @@ class Task
 
 	protected:
 		const char * logName;
-		MeteoLog * meteoLog;
+		MyLog * meteoLog;
+		const ConfigManager * configManager;
 };
 
 #endif // TASK_H

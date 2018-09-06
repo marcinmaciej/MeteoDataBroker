@@ -1,116 +1,185 @@
-//
-// Created by marcin on 06.04.18.
-//
+/** @author  Created by Marcin Guziołek on 06.04.18.
+ *  @brief Class ConfigManager manages app configuration
+ *
+ */
 
 #include "ConfigManager.h"
 
-void serialSetPort(ConfigManager &manager, const string &paramVal)
+/** @brief function for configuring serial port
+ *
+ *  @param manager
+ *   @param paramVal
+ */
+void serialSetPort(const ConfigManager *manager, const string paramVal)
 {
-    manager.serialPort->setPort(paramVal);
+    manager->serialConfig->setPort(paramVal);
 }
 
-void serialSetSpeed(ConfigManager &manager, const string &paramVal)
+void serialSetSpeed(const ConfigManager *manager, const string paramVal)
 {
-    manager.serialPort->setPort(paramVal);
+    manager->serialConfig->setSpeed(paramVal);
 }
 
-void serialSetDataBits(ConfigManager &manager, const string &paramVal)
+void serialSetDataBits(const ConfigManager *manager, const string paramVal)
 {
-    manager.serialPort->setPort(paramVal);
+    manager->serialConfig->setDataBits(paramVal);
 }
 
-void serialSetStopBits(ConfigManager &manager, const string &paramVal)
+void serialSetStopBits(const ConfigManager *manager, const string paramVal)
 {
-    manager.serialPort->setPort(paramVal);
+    manager->serialConfig->setStopBits(paramVal);
 }
 
-void serialSetParity(ConfigManager &manager, const string &paramVal)
+void serialSetParity(const ConfigManager *manager, const string paramVal)
 {
-    manager.serialPort->setPort(paramVal);
+    manager->serialConfig->setParity(paramVal);
 }
 
-void serialSetFlowControl(ConfigManager &manager, const string &paramVal)
+void serialSetFlowControl(const ConfigManager *manager, const string paramVal)
 {
-    manager.serialPort->setPort(paramVal);
+    manager->serialConfig->setFlowControl(paramVal);
 }
 
-void httpSetHostIp(ConfigManager &manager, const string &paramVal)
+
+void serialSetSleepTime(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setHostIp(paramVal);
+    manager->serialConfig->setSleepTime(paramVal);
 }
 
-void httpSetHostName(ConfigManager &manager, const string &paramVal)
+void serialSetDataLength(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setHostName(paramVal);
+    manager->serialConfig->setDataLength(paramVal.c_str());
 }
 
-void httpSetPort(ConfigManager &manager, const string &paramVal)
+/** @brief functions for configuring http connection
+ *
+ *  @param manager
+ *  @param paramVal
+ */
+void httpSetHostIp(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setPort(atoi(paramVal.c_str()));
+    manager->httpConfig->setHostIp(paramVal);
 }
 
-void httpSetAddressFamily(ConfigManager &manager, const string &paramVal)
+void httpSetHostName(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setAddressFamily(paramVal);
+    manager->httpConfig->setHostName(paramVal);
 }
 
-void httpSetSocketType(ConfigManager &manager, const string &paramVal)
+void httpSetPort(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setSocketType(paramVal);
+    manager->httpConfig->setPort(paramVal);
 }
 
-void httpSetProtocol(ConfigManager &manager, const string &paramVal)
+void httpSetAddressFamily(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setProtocol(paramVal);
+    manager->httpConfig->setAddressFamily(paramVal);
 }
 
-void httpSetRequest(ConfigManager &manager, const string &paramVal)
+void httpSetSocketType(const ConfigManager *manager, const string paramVal)
 {
-    manager.connectionConfig->setRequest(paramVal);
+    manager->httpConfig->setSocketType(paramVal);
 }
 
+void httpSetProtocol(const ConfigManager *manager, const string paramVal)
+{
+    manager->httpConfig->setProtocol(paramVal);
+}
+
+void httpSetRequest(const ConfigManager *manager, const string paramVal)
+{
+    manager->httpConfig->setRequest(paramVal);
+}
+
+void httpSetSleepTime(const ConfigManager *manager, const string paramVal)
+{
+    manager->httpConfig->setSleepTime(paramVal);
+}
+
+void httpSetWaitNetwork(const ConfigManager *manager, const string paramVal)
+{
+    manager->httpConfig->setWaitNetwork(paramVal);
+}
+
+void httpSetDataLength(const ConfigManager *manager, const string paramVal)
+{
+    manager->httpConfig->setDataLength(paramVal);
+}
+
+/** @brief ConfigManager constructor
+ *
+ */
 ConfigManager::ConfigManager()
 {
-    /* map serial port params */
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", serialSetPort));
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("speed", serialSetSpeed));
-    this->mapParamToMethod.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("databits", serialSetDataBits));
-    this->mapParamToMethod.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("stopbits", serialSetStopBits));
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("parity", serialSetParity));
-    this->mapParamToMethod.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("flowcontrol", serialSetFlowControl));
+    this->meteoLog = new MyLog("MS-ConfigManager");
 
-    /* map http connection params */
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostip", httpSetHostIp));
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("hostname", httpSetHostName));
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("port", httpSetPort));
+    this->programConfig = new AppConfig();
+
+    this->serialConfig = new SerialConfig();
+
+    this->httpConfig = new HttpConfig();
+
+/** @brief A map with serial port params of type string and setters functions
+*
+*/
     this->mapParamToMethod.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("addressfamily", httpSetAddressFamily));
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialport", serialSetPort));
     this->mapParamToMethod.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("sockettype", httpSetSocketType));
-    this->mapParamToMethod.insert(pair<string, void (*)(ConfigManager &, const string &)>("protocol", httpSetProtocol));
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialspeed", serialSetSpeed));
     this->mapParamToMethod.insert(
-            pair<string, void (*)(ConfigManager &, const string &)>("request", httpSetRequest));
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialdatabits", serialSetDataBits));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialstopbits", serialSetStopBits));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialparity", serialSetParity));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialflowcontrol", serialSetFlowControl));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialsleeptime", serialSetSleepTime));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("serialdatalength", serialSetDataLength));
 
-    this->meteoLog = new MeteoLog("MS-ConfigManager");
+/** @brief The map with http connection params of type string and setters functions
+ *
+ */
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httphostip", httpSetHostIp));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httphostname", httpSetHostName));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpport", httpSetPort));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpaddressfamily",
+                                                                              httpSetAddressFamily));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpsockettype", httpSetSocketType));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpprotocol", httpSetProtocol));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httprequest", httpSetRequest));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpsleeptime", httpSetSleepTime));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpwaitnetwork", httpSetWaitNetwork));
+    this->mapParamToMethod.insert(
+            pair<const string, void (*)(const ConfigManager *, const string)>("httpdatalength", httpSetDataLength));
 
-    this->programConfig = new ProgramConfig();
-
-    this->serialPort = new SerialPort();
-
-    this->connectionConfig = new ConnectionConfig();
-
-    if (!this->loadSerialPort(*this->programConfig->getRs232ConfigPath()))
+/** @brief The params loading and initiating block for serial port
+ *
+ */
+    if (!this->loadSerialPort(this->programConfig->getRs232ConfigPath()))
     {
         this->makeAllPaths();
-        this->setDefaultSerial();
+        this->saveDefault(this->programConfig->getRs232ConfigPath(), this->getDefaultSerialToSave());
     }
 
-    if (!this->loadHttp(*this->programConfig->getHttpConfigPath()))
+/** @brief The params loading and initiating block for http connection
+ *
+ */
+    if (!this->loadHttp(this->programConfig->getHttpConfigPath()))
     {
-        this->setDefaultHttp();
+        this->makeAllPaths();
+        this->saveDefault(this->programConfig->getHttpConfigPath(), this->getDefaultHttpToSave());
     }
 }
 
@@ -118,12 +187,16 @@ const char *ConfigManager::getDefaultSerialToSave()
 {
     string config;
 
-    config = "Port=" + this->serialPort->getPort();
-    config += ",Speed=" + this->serialPort->getSpeed();
-    config += ",DataBits=" + this->serialPort->getDataBits();
-    config += ",StopBits=" + this->serialPort->getStopBits();
-    config += ",Parity=" + this->serialPort->getParity();
-    config += ",FlowControl=" + this->serialPort->getFlowControl();
+    config = "SerialSleepTime=" + to_string(this->serialConfig->getSleepTime());
+    config += ",SerialDataLength=" + to_string(this->serialConfig->getDataLength());
+    config += ",SerialPort=" + this->serialConfig->getPort();
+    config += ",SerialSpeed=" + this->serialConfig->getSpeed();
+    config += ",SerialDataBits=" + this->serialConfig->getDataBits();
+    config += ",SerialStopBits=" + this->serialConfig->getStopBits();
+    config += ",SerialParity=" + this->serialConfig->getParity();
+    config += ",SerialFlowControl=" + this->serialConfig->getFlowControl();
+    /* Add character marker closing the string of parameters */
+    config += ';';
 
     return config.c_str();
 }
@@ -132,102 +205,49 @@ const char *ConfigManager::getDefaultHttpToSave()
 {
     string config;
 
-    config = "HostIp=" + this->connectionConfig->getHostIp();
-    config += ",HostName=" + this->connectionConfig->getHostName();
-    config += ",Port=" + this->connectionConfig->getPort();
-    config += ",AddressFamily=" + this->connectionConfig->getAddressFamily();
-    config += ",SocketType=" + this->connectionConfig->getSocketType();
-    config += ",Protocol=" + this->connectionConfig->getProtocol();
-    config += ",Request=" + this->connectionConfig->getRequest();
+    config = "HttpDataLength=" + to_string(this->httpConfig->getDataLength());
+    config += ",HttpSleepTime=" + to_string(this->httpConfig->getSleepTime());
+    config += ",HttpWaitNetwork=" + to_string(this->httpConfig->getWaitNetwork());
+    config += ",HttpHostIp=" + this->httpConfig->getHostIp();
+    config += ",HttpHostName=" + this->httpConfig->getHostName();
+    config += ",HttpPort=" + this->httpConfig->getPort();
+    config += ",HttpAddressFamily=" + this->httpConfig->getAddressFamily();
+    config += ",HttpSocketType=" + this->httpConfig->getSocketType();
+    config += ",HttpProtocol=" + this->httpConfig->getProtocol();
+    config += ",HttpRequest=" + this->httpConfig->getRequest();
+    /* Add character marker closing the string of parameters */
+    config += ';';
 
     return config.c_str();
 }
 
-void ConfigManager::setDefaultSerial()
-{
-    this->serialPort->setPort();
-    this->serialPort->setSpeed();
-    this->serialPort->setDataBits();
-    this->serialPort->setStopBits();
-    this->serialPort->setParity();
-    this->serialPort->setFlowControl();
-
-    this->saveDefaultSerial();
-}
-
-void ConfigManager::setDefaultHttp()
-{
-    this->connectionConfig->setHostIp();
-    this->connectionConfig->setHostName();
-    this->connectionConfig->setPort();
-    this->connectionConfig->setSocketType();
-    this->connectionConfig->setAddressFamily();
-    this->connectionConfig->setProtocol();
-    this->connectionConfig->setRequest();
-
-    this->saveDefaultHttp();
-}
-
-void ConfigManager::saveDefaultSerial()
+void ConfigManager::saveDefault(const string &path, const char *config)
 {
     try
     {
         int fd;
-        ssize_t bw = 0, btw = 0;
-        const char *config;
-
-        config = this->getDefaultSerialToSave();
+        ssize_t bw = 0,
+                btw = 0;
 
         btw = strlen(config);
 
-        fd = open(this->programConfig->getRs232ConfigPath()->c_str(), O_CREAT | O_WRONLY, 0600);
+        fd = open(path.c_str(), O_CREAT | O_WRONLY, 0777);
         if (fd == -1)
         {
             throw errno;
         }
 
         bw = write(fd, config, btw);
+
+        close(fd);
+
         if (bw != btw)
         {
             throw errno;
         }
 
-        close(fd);
-
-    } catch (...)
-    {
-        this->meteoLog->err(strerror(errno));
     }
-}
-
-void ConfigManager::saveDefaultHttp()
-{
-    try
-    {
-        int fd;
-        ssize_t bw = 0;
-        size_t btw = 0;
-        const char *config;
-
-        config = this->getDefaultHttpToSave();
-
-        btw = strlen(config);
-
-        fd = open(this->programConfig->getHttpConfigPath()->c_str(), O_CREAT | O_WRONLY, 0600);
-        if (fd == -1)
-        {
-            throw errno;
-        }
-
-        bw = write(fd, config, btw);
-        if (bw != btw)
-        {
-            throw errno;
-        }
-
-        close(fd);
-
-    } catch (...)
+    catch (...)
     {
         this->meteoLog->err(strerror(errno));
     }
@@ -242,14 +262,12 @@ bool ConfigManager::getParams(const string &path) const
 {
     try
     {
-        ConfigManager manager = ConfigManager();
-
         string params,
                 paramValue,
                 paramName;
 
-        string::size_type bPos = 0,
-                ePos = 0,
+        string::size_type parStart = 0,
+                parEnd = 0,
                 length = 0;
 
         params = loadParams(path);
@@ -261,20 +279,19 @@ bool ConfigManager::getParams(const string &path) const
 
         length = params.length();
 
-        while ((ePos = params.find_first_of(COMMA)))
+        while (string::npos != (parEnd = params.find(COMMA, parStart)))
         {
-            substringParams(&params, &bPos, &ePos, &paramValue, &paramName);
+            substringParams(&params, &parStart, &parEnd, &paramValue, &paramName);
 
-            mapParamToMethod.find(paramName)->second(manager, paramValue);
+            mapParamToMethod.find(paramName)->second(this, paramValue);
         }
 
         /* Get last param behind the last comma */
-        substringParams(&params, &bPos, &length, &paramValue, &paramName);
+        substringParams(&params, &parStart, &length, &paramValue, &paramName);
 
-        mapParamToMethod.find(paramName)->second(manager, paramValue);
+        mapParamToMethod.find(paramName)->second(this, paramValue);
 
         return true;
-        //temp = temp.erase(temp.find_first_of(ENDDELIMITER));
 
     } catch (...)
     {
@@ -283,22 +300,25 @@ bool ConfigManager::getParams(const string &path) const
 }
 
 void
-ConfigManager::substringParams(const string *params, string::size_type *bPos, const string::size_type *ePos,
+ConfigManager::substringParams(const string *params, string::size_type *parStart, const string::size_type *parEnd,
                                string *paramValue,
                                string *paramName) const
 {
     string param;
-    string::size_type pos = 0;
+    string::size_type subStart = 0;
+    string::size_type parLength = 0;
 
-    param = params->substr(*bPos, *ePos - 1); /* Get substring to first comma key=value */
+    parLength = *parEnd - *parStart;
 
-    pos = param.find_first_of(ASSIGNMENT); /* Find position of equal sign */
+    param = params->substr(*parStart, parLength); /* Get substring to first comma key=value */
 
-    *paramValue = param.substr(pos + 1, param.length()); /* Get substring of value */
+    subStart = param.find(EQUALSIGN); /* Find position of equal sign */
 
-    *paramName = param.substr(*bPos, pos - 1);
+    *paramValue = param.substr(subStart + 1, param.length()); /* Get substring of value */
 
-    *bPos += *ePos;
+    *paramName = param.substr(0, subStart);
+
+    *parStart += parLength + 1;
 
     transform(paramName->begin(), paramName->end(), paramName->begin(),
               ::tolower); /* Change all letters to lower */
@@ -313,8 +333,9 @@ const char *ConfigManager::loadParams(const string &path) const
 {
     FILE *fd;
     char *line = nullptr;
-    ssize_t br = 0;
+    ssize_t resultLen = 0;
     size_t len = 0;
+    auto *allLines = new string();
 
     try
     {
@@ -324,38 +345,58 @@ const char *ConfigManager::loadParams(const string &path) const
             return "";
         }
 
-        br = getline(&line, &len, fd);
-
-        if (br != len)
+        while ((resultLen = getline(&line, &len, fd)) > -1)
         {
-            throw errno;
+            len = strlen(line);
+
+            if (resultLen != len)
+            {
+                throw errno;
+            }
+            *allLines += line;
+            line = nullptr;
         }
+
+        fclose(fd);
+
+
     } catch (...)
     {
         this->meteoLog->err(strerror(errno));
     }
 
-    return line;
+    allLines->erase(allLines->rfind(';'));
+    fd = nullptr;
+
+    return allLines->c_str();
 }
 
 void ConfigManager::makeDir(const string &path)
 {
-    mkdir(path.c_str(), 0744);
+    try
+    {
+
+        mkdir(path.c_str(), 0744);
+
+    } catch (...)
+    {
+        this->meteoLog->err(strerror(errno));
+    }
 }
 
 void ConfigManager::makeAllPaths()
 {
-    this->makeDir(*this->programConfig->getPidFileDirPath());
-    this->makeDir(*this->programConfig->getConfigDirPath());
-    this->makeDir(*this->programConfig->getOffsetDirPath());
-    this->makeDir(*this->programConfig->getDataDirPath());
+    this->makeDir(this->programConfig->getPidFileDirPath());
+    this->makeDir(this->programConfig->getConfigDirPath());
+    this->makeDir(this->programConfig->getOffsetDirPath());
+    this->makeDir(this->programConfig->getDataDirPath());
 }
 
 ConfigManager::~ConfigManager()
 {
     delete this->programConfig;
 
-    delete this->serialPort;
+    delete this->serialConfig;
 
-    delete this->connectionConfig;
+    delete this->httpConfig;
 }

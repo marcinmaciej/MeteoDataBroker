@@ -1,43 +1,42 @@
-//
-// Created by marcin on 06.04.18.
-//
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
 
 #ifndef METEOSTATIONDRIVERS_CONFIGMANAGER_H
 #define METEOSTATIONDRIVERS_CONFIGMANAGER_H
 
-#include "ProgramConfig.h"
-#include "SerialPort.h"
-#include "ConnectionConfig.h"
-#include "MeteoLog.h"
+
+#include "MyLog.h"
+#include "AppConfig.h"
+#include "SerialConfig.h"
+#include "HttpConfig.h"
 #include <map>
 #include <iterator>
-#include <algorithm>
 #include <fcntl.h>
 #include <sys/stat.h>
 
 class ConfigManager
 {
 public:
-    explicit ConfigManager();
+    ConfigManager();
 
     virtual ~ConfigManager();
 
-    ProgramConfig *programConfig;
+    AppConfig *programConfig;
 
-    SerialPort *serialPort;
+    SerialConfig *serialConfig;
 
-    ConnectionConfig *connectionConfig;
+    HttpConfig *httpConfig;
 
 private:
 
-    map<string, void (*)(ConfigManager &, const string &)> mapParamToMethod;
+    map<const string, void (*)(const ConfigManager *, const string)> mapParamToMethod;
 
-    MeteoLog *meteoLog;
+    MyLog *meteoLog;
 
     const char COMMA = ',',
-            ASSIGNMENT = '=';
+            EQUALSIGN = '=';
 
-    const char *ENDDELIMITER = "\r\n";
 
     const char *loadParams(const string &path) const;
 
@@ -49,13 +48,7 @@ private:
 
     void makeDir(const string & path);
 
-    void setDefaultSerial();
-
-    void setDefaultHttp();
-
-    void saveDefaultSerial();
-
-    void saveDefaultHttp();
+    void saveDefault(const string &path, const char *config);
 
     bool loadSerialPort(const string &path);
 
@@ -63,7 +56,7 @@ private:
 
     bool getParams(const string &path) const;
 
-    void substringParams(const string *params, string::size_type *bPos, const string::size_type *ePos, string *paramValue,
+    void substringParams(const string *params, string::size_type *parStart, const string::size_type *parEnd, string *paramValue,
                          string *paramName) const;
 };
 

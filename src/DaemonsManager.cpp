@@ -1,19 +1,18 @@
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
+
 #include "DaemonsManager.h"
 
-#include "HttpTask.h"
-#include "Rs232Task.h"
 
-
-DaemonsManager::DaemonsManager()
+DaemonsManager::DaemonsManager(ConfigManager *configManager)
 {
 
-    this->FILE_EXT = new const string(".pid");
+    this->setConfigManager(configManager);
 
-    this->pidFilePath = new const string("/etc/meteo-station/");
+    this->setPidFileDirPath(&this->getConfigManager()->programConfig->getPidFileDirPath());
 
-    this->daemonsNames = new const string[2]{"rs232d", "httpd"};
-
-    this->sleepTime = new unsigned int[2]{2, 5};
+    this->setDaemonsNames(this->getConfigManager()->programConfig->getDaemonsNames());
 
     this->daemonsPids = new pid_t[2];
 
@@ -21,7 +20,7 @@ DaemonsManager::DaemonsManager()
 
     this->setPid(this->HTTPD, 0);
 
-    this->meteoLog = new MeteoLog("MS-DaemonsManagerClass");
+    this->meteoLog = new MyLog("MS-DaemonsManagerClass");
 
 }
 
@@ -62,20 +61,22 @@ void DaemonsManager::startDaemons()
             if (fork())
             {
 
-            } else
+            }
+            else
             {
 
-                this->rs232d = new MyDaemon(this->getSleepTime(this->RS232D), new Rs232Task(),
-                                            this->getDaemonName(this->RS232D), this->getPidFilePath());
+                this->rs232d = new MyDaemon(new SerialTask(this->getConfigManager()), this->getDaemonName(this->RS232D),
+                                            this->getPidFileDirPath());
 
                 this->setPid(this->RS232D, this->rs232d->getSid());
 
             }
-        } else
+        }
+        else
         {
 
-            this->httpd = new MyDaemon(*(this->sleepTime + this->HTTPD), new HttpTask(),
-                                       this->getDaemonName(this->HTTPD), this->getPidFilePath());
+            this->httpd = new MyDaemon(new HttpTask(this->getConfigManager()),
+                                       this->getDaemonName(this->HTTPD), this->getPidFileDirPath());
 
             this->setPid(this->HTTPD, this->httpd->getSid());
 
@@ -86,16 +87,15 @@ void DaemonsManager::startDaemons()
     {
         this->meteoLog->err(strerror(errno));
     }
-
 }
 
-void DaemonsManager::getSavedPid(int daemon)
+void DaemonsManager::getSavedPid(unsigned char daemon)
 {
 
-    string pidFilePath = *this->pidFilePath;
+    string pidFilePath = this->getPidFileDirPath();
     pidFilePath += "."; /* Make file hidden */
-    pidFilePath += *(this->daemonsNames + daemon);
-    pidFilePath += *this->FILE_EXT;
+    pidFilePath += this->getDaemonName(daemon);
+    pidFilePath += ".pid";
 
     int fd;
 
@@ -117,7 +117,8 @@ void DaemonsManager::getSavedPid(int daemon)
 
             close(fd);
 
-        } else
+        }
+        else
         {
             throw errno;
         }
@@ -140,17 +141,20 @@ void DaemonsManager::killDaemon(const pid_t *daemonPid)
             if (errno == EPERM)
             {
                 this->meteoLog->warn("NO PERMISSION TO KILL!");
-            } else if (errno == ESRCH)
+            }
+            else if (errno == ESRCH)
             {
                 this->meteoLog->warn("NO ACTIVE PID!");
-            } else if (errno == EINVAL)
+            }
+            else if (errno == EINVAL)
             {
                 this->meteoLog->warn("INVALID SIGNAL!");
             }
 
             throw errno;
 
-        } else
+        }
+        else
         {
             string message = "Daemon killed! PID:";
             message += to_string(*daemonPid);
@@ -182,19 +186,35 @@ bool DaemonsManager::isRunning(const pid_t *daemonPid)
     return false;
 }
 
+ConfigManager *DaemonsManager::getConfigManager() const
+{
+    return this->configManager;
+}
+
+void DaemonsManager::setConfigManager(ConfigManager *configManager)
+{
+    this->configManager = configManager;
+}
+
+const string DaemonsManager::getPidFileDirPath() const
+{
+    return *this->pidFilePath;
+}
+
+void DaemonsManager::setPidFileDirPath(const string *pidFilePath)
+{
+    this->pidFilePath = pidFilePath;
+}
+
+
 const string DaemonsManager::getDaemonName(unsigned char daemon) const
 {
     return *(this->daemonsNames + daemon);
 }
 
-const string DaemonsManager::getPidFilePath() const
+void DaemonsManager::setDaemonsNames(const string *daemonsNames)
 {
-    return *this->pidFilePath;
-}
-
-unsigned int DaemonsManager::getSleepTime(unsigned char daemon) const
-{
-    return *(this->sleepTime + daemon);
+    this->daemonsNames = daemonsNames;
 }
 
 pid_t *DaemonsManager::getPid(unsigned char daemon) const
@@ -202,7 +222,7 @@ pid_t *DaemonsManager::getPid(unsigned char daemon) const
     return (this->daemonsPids + daemon);
 }
 
-void DaemonsManager::setPid(unsigned char daemon, int pid)
+void DaemonsManager::setPid(unsigned char daemon, pid_t pid)
 {
     *(this->daemonsPids + daemon) = pid;
 }
@@ -214,7 +234,6 @@ void DaemonsManager::collectGarbage()
     delete this->meteoLog;
     delete this->httpd;
     delete this->rs232d;
-
 }
 
 DaemonsManager::~DaemonsManager()
@@ -222,14 +241,4 @@ DaemonsManager::~DaemonsManager()
     this->meteoLog->err("BYE BYE");
 
     this->collectGarbage();
-}
-
-void DaemonsManager::setSleepTime(unsigned int *sleepTime)
-{
-    this->sleepTime = sleepTime;
-}
-
-void DaemonsManager::setDaemonsNames(const string *daemonsNames)
-{
-    this->daemonsNames = daemonsNames;
 }

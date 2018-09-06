@@ -1,10 +1,13 @@
-#include "MeteoLog.h"
+/**
+ * @author  Created by Marcin Guziołek on 06.04.18.
+ */
 
-MeteoLog::MeteoLog(string ident)
+#include "MyLog.h"
+
+MyLog::MyLog(string ident)
 {
 
-
-    this->ident = ident.c_str();
+    this->ident = ident;
 
     this->levels[0] =  LOG_EMERG;     /* system is unusable */
 
@@ -28,46 +31,46 @@ MeteoLog::MeteoLog(string ident)
 
 }
 
-void MeteoLog::info(const char * msg)
+void MyLog::info(const char * msg)
 {
 
-    openlog(this->ident,this->options,this->facility);
+    openlog(this->ident.c_str(),this->options,this->facility);
     syslog(this->levels[6],"User id: %d, %s",getpid(),msg);
     closelog();
 
 }
 
-void MeteoLog::notice(const char * msg)
+void MyLog::notice(const char * msg)
 {
 
-    openlog(this->ident,this->options,this->facility);
+    openlog(this->ident.c_str(),this->options,this->facility);
     syslog(this->levels[5],"User id: %d, %s",getpid(),msg);
     closelog();
 
 }
 
-void MeteoLog::echoDigit(int digit)
+void MyLog::echoDigit(int digit)
 {
 
-    openlog(this->ident,this->options,this->facility);
+    openlog(this->ident.c_str(),this->options,this->facility);
     syslog(this->levels[5],"User id: %d, %d",getpid(),digit);
     closelog();
 
 }
 
-void MeteoLog::warn(const char * msg)
+void MyLog::warn(const char * msg)
 {
 
-    openlog(this->ident,this->options,this->facility);
+    openlog(this->ident.c_str(),this->options,this->facility);
     syslog(this->levels[4],"User id: %d, %s",getpid(),msg);
     closelog();
 
 }
 
-void MeteoLog::err(const char * msg)
+void MyLog::err(const char * msg)
 {
 
-    openlog(this->ident,this->options,this->facility);
+    openlog(this->ident.c_str(),this->options,this->facility);
     syslog(this->levels[3],"User id: %d, %s",getpid(),msg);
     closelog();
 
