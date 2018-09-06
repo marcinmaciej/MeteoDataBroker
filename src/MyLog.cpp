@@ -4,7 +4,7 @@ MeteoLog::MeteoLog(string ident)
 {
 
 
-    this->ident = new string(ident);
+    this->ident = ident.c_str();
 
     this->levels[0] =  LOG_EMERG;     /* system is unusable */
 
@@ -31,7 +31,7 @@ MeteoLog::MeteoLog(string ident)
 void MeteoLog::info(const char * msg)
 {
 
-    openlog(this->ident->c_str(),this->options,this->facility);
+    openlog(this->ident,this->options,this->facility);
     syslog(this->levels[6],"User id: %d, %s",getpid(),msg);
     closelog();
 
@@ -40,7 +40,7 @@ void MeteoLog::info(const char * msg)
 void MeteoLog::notice(const char * msg)
 {
 
-    openlog(this->ident->c_str(),this->options,this->facility);
+    openlog(this->ident,this->options,this->facility);
     syslog(this->levels[5],"User id: %d, %s",getpid(),msg);
     closelog();
 
@@ -49,7 +49,7 @@ void MeteoLog::notice(const char * msg)
 void MeteoLog::echoDigit(int digit)
 {
 
-    openlog(this->ident->c_str(),this->options,this->facility);
+    openlog(this->ident,this->options,this->facility);
     syslog(this->levels[5],"User id: %d, %d",getpid(),digit);
     closelog();
 
@@ -58,7 +58,7 @@ void MeteoLog::echoDigit(int digit)
 void MeteoLog::warn(const char * msg)
 {
 
-    openlog(this->ident->c_str(),this->options,this->facility);
+    openlog(this->ident,this->options,this->facility);
     syslog(this->levels[4],"User id: %d, %s",getpid(),msg);
     closelog();
 
@@ -67,7 +67,7 @@ void MeteoLog::warn(const char * msg)
 void MeteoLog::err(const char * msg)
 {
 
-    openlog(this->ident->c_str(),this->options,this->facility);
+    openlog(this->ident,this->options,this->facility);
     syslog(this->levels[3],"User id: %d, %s",getpid(),msg);
     closelog();
 

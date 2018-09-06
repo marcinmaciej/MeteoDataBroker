@@ -20,11 +20,6 @@ const string &ConnectionConfig::getHostName() const
     return this->hostName;
 }
 
-void ConnectionConfig::setHostName(const string &hostName)
-{
-    this->hostName = hostName;
-}
-
 const string &ConnectionConfig::getAddressFamily() const
 {
     return this->addressFamily;
@@ -48,6 +43,16 @@ const string &ConnectionConfig::getHostIp() const
 const string &ConnectionConfig::getSocketType() const
 {
     return this->socketType;
+}
+
+const string &ConnectionConfig::getPort() const
+{
+    return this->port;
+}
+
+void ConnectionConfig::setHostName(const string &hostName)
+{
+    this->hostName = hostName;
 }
 
 void ConnectionConfig::setSocketType(const string &socketType)
@@ -75,12 +80,7 @@ void ConnectionConfig::setAddressFamily(const string &addressFamily)
     this->addressFamily = addressFamily;
 }
 
-int ConnectionConfig::getPort() const
-{
-    return this->port;
-}
-
-void ConnectionConfig::setPort(int port)
+void ConnectionConfig::setPort(const string &port)
 {
     this->port = port;
 }

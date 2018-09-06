@@ -1,7 +1,7 @@
 #ifndef METEOLOG_H
 #define METEOLOG_H
 
-#include <iostream> /* type string, cout, to_string */
+
 #include <cstring>  /* strlen, strerror strcat strcpy */
 #include <cerrno>   /* errno */
 #include <unistd.h>  /* getpid, setsid, open, read, write, fork, close, sleep, lockf, ftruncate, mkdir */
@@ -26,7 +26,7 @@ public:
 
 private:
 
-    string * ident;
+    const char * ident;
 
     int facility,
         levels[8],

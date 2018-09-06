@@ -17,7 +17,7 @@ public:
 
     virtual ~ConnectionConfig() = default;
 
-    int getPort() const;
+    const string &getPort() const;
 
     const string &getHostName() const;
 
@@ -32,19 +32,20 @@ public:
     const string &getAddressFamily() const;
 
 
+    void setHostIp(const string &hostIp = "127.0.0.1");
+
     void setHostName(const string &hostName = "localhost");
+
+    void setPort(const string &port = "80");
+
+    void setSocketType(const string &socketType = "tcp");
 
     void setAddressFamily(const string &addressFamily = "both");
 
     void setProtocol(const string &protocol = "none");
 
-    void setRequest(const string &request = "GET / HTTP/1.1\r\nHOST: localhost\r\n\r\n");
+    void setRequest(const string &request = "POST /index.html HTTP/1.1\r\nHost:localhost\r\nContent-Type:application/x-www-form-urlencoded;charset=utf-8\r\nContent-Length:#####\r\nConnection:close\r\n\r\ndata=");
 
-    void setHostIp(const string &hostIp = "127.0.0.1");
-
-    void setSocketType(const string &socketType = "TCP");
-
-    void setPort(int port = 80);
 
 private:
     string hostName,
@@ -52,9 +53,9 @@ private:
             addressFamily,
             socketType,
             protocol,
-            request;
+            request,
+            port;
 
-    int port;
 };
 
 
