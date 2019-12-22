@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include <syslog.h> /* openlog, syslog, closelog */
+#include <string>
 
 using namespace std;
 
@@ -20,22 +21,26 @@ class MyLog
 
 public:
     explicit MyLog(string ident = "MeteoStationLog");
+
     ~MyLog() = default;
 
-    void info(const char * msg);
-    void notice(const char * msg);
+    void info(const char *msg);
+
+    void notice(const char *msg);
+
     void echoDigit(int digit);
-    void warn(const char * msg);
-    void err(const char * msg);
+
+    void warn(const char *msg);
+
+    void err(const char *msg);
 
 private:
 
     string ident;
 
     int facility,
-        levels[8],
-        options;
-
+            levels[8],
+            options;
 
 
 };

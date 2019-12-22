@@ -5,10 +5,10 @@
 
 #include "ConfigManager.h"
 
-/** @brief function for configuring serial port
+/** @brief functions for configuring serial port
  *
- *  @param manager
- *   @param paramVal
+ *  @param type:const ConfigManager * ,name:manager
+ *   @param type:const string, name:paramVal
  */
 void serialSetPort(const ConfigManager *manager, const string paramVal)
 {

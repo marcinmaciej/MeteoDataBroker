@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
-project(MeteoStationDrivers)
+project(MeteoStationDriver)
 
 set(CMAKE_CXX_STANDARD 11)
 
+
 include_directories(include)
+
 
 
 add_executable(meteo-station
@@ -23,4 +25,4 @@ add_executable(meteo-station
         src/MyDaemon.cpp
         src/SerialTask.cpp
         src/Task.cpp
-        main.cpp src/SerialConfig.cpp include/SerialConfig.h src/HttpConfig.cpp include/HttpConfig.h src/ConfigManager.cpp include/ConfigManager.h src/AppConfig.cpp include/AppConfig.h)
+        main.cpp)

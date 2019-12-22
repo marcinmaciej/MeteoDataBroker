@@ -6,7 +6,6 @@
 #define RS232TASK_H
 
 #define SHOW_SERIAL false
-#define RASPBERRYPI false
 
 #include "Task.h"
 

@@ -23,9 +23,10 @@
 #include <iostream>
 #include <termios.h>
 
-#define RASPBERRYPI false
 
 using namespace std;
+
+#define RASPBERRYPI true
 
 class SerialConfig
 {
@@ -37,24 +38,28 @@ public:
     virtual ~SerialConfig() = default;
 
 
+    /**@brief Setter for field serialPort
+       *
+       * Default serial port path for Raspbian.
+       *
+       * @param const string & serialPort path default /dev/ttyAMA0
+       * /
+
+  /**@brief Setter for private field serialPort
+   *
+   * Path to serial port using Prolific usb to serial adapter PL2303.
+   *
+   * @param const string & serialPort path default /dev/ttyUSB0
+   */
+// nie umieszczać komentarzy gwiazdkowych pomiędzy #if #else #endif
+
 #if RASPBERRYPI
 
-    /**@brief Setter for field serialPort
-     *
-     * Default serial port path for Raspbian.
-     *
-     * @param const string & serialPort path default /dev/ttyAMA0
-     * /
-        void setPort(const string &serialPort = "/dev/ttyAMA0"); /* */
+
+    void setPort(const string &serialPort = "/dev/ttyAMA0");
 
 #else
 
-/**@brief Setter for private field serialPort
- *
- * Path to serial port using Prolific usb to serial adapter PL2303.
- *
- * @param const string & serialPort path default /dev/ttyUSB0
- */
     void setPort(const string &serialPort = "/dev/ttyUSB0");
 
 #endif

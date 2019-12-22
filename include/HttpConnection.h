@@ -5,7 +5,7 @@
 #ifndef HTTPCONNECTION_H
 #define HTTPCONNECTION_H
 
-#define TESTING true
+#define TESTING false
 
 #include <netdb.h>
 #include <sys/socket.h>
@@ -114,8 +114,6 @@ private:
     size_t getBytesToSend();
 
     void setBytesToSend(size_t bytesToSend);
-
-    /* void collectGarbage(); */
 
 };
 

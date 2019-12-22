@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
             }
             catch (...)
             {
-                cout<<strerror(errno);;
+                cout<<strerror(errno);
             }
 
         } else if (argument == RESTART)

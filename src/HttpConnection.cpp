@@ -4,7 +4,7 @@
 
 #include "HttpConnection.h"
 
-#define RASPBERRYPI false
+#define RASPBERRYPI true
 
 HttpConnection::HttpConnection(const ConfigManager *configManager)
 {

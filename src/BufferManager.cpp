@@ -56,16 +56,16 @@ void BufferManager::writeBuffer(const char *data)
         size_t numToWrite;
 
         numToWrite = strlen(data);
-
-#if SHOW_BUFFER
         /* TESTING BLOCK */
+#if SHOW_BUFFER
+       
         auto *ms = new string("writeBuffer(bytes to write) = ");
         *ms += to_string(numToWrite);
         this->meteoLog->err(ms->c_str());
         *ms = "Content to write = ";
         *ms += data;
         this->meteoLog->warn(ms->c_str());
-        /*--------------------------------------------------------------------------------*/
+        
 #endif // SHOW_BUFFER
 
         numWritten = write(this->getBuffFileDesc(), data, numToWrite);
