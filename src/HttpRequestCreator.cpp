@@ -4,19 +4,19 @@
 
 #include "HttpRequestCreator.h"
 
-#define SHOW_REQUEST true
+#define TESTING_SHOW_REQUEST false
 
 HttpRequestCreator::HttpRequestCreator(const ConfigManager &configManager) {
 
     /* Inicjalizuje obsługę logów */
-    this->meteoLog = new MyLog("MS::HttpRequestCreator");
+    this->meteoLog = new MyLog("CLASS::HttpRequestCreator");
 
     /* Ustawiam metodę i ścieżkę URL zasobu w zapytaniu http */
-    this->httpMethod = configManager.getHttpConfig("HttpMethod"); /* Metoda zapytania http*/
-    this->httpPath = configManager.getHttpConfig("HttpPath");  /* Ścieżka URL do zasobu w zapytaniu http */
+    this->httpMethod = configManager.getConfig("HttpMethod",configManager.HTTP); /* Metoda zapytania http*/
+    this->httpPath = configManager.getConfig("HttpPath",configManager.HTTP);  /* Ścieżka URL do zasobu w zapytaniu http */
 
     /* Nazwa klucza dla wartości danych */
-    this->httpDataKeyName = configManager.getHttpConfig("HttpDataKeyName");
+    this->httpDataKeyName = configManager.getConfig("HttpDataKeyName",configManager.HTTP);
 
     /* Kopiuje mapę z nagłówkami zapytania http */
     this->headers = configManager.getHttpHeaders();
@@ -98,8 +98,9 @@ std::string HttpRequestCreator::createRequest(const string &data) {
             /* Jeżeli metoda zapytania inna niż 'GET', dodaje dodatkowe nagłówki
                i na końcu dane */
 
-            /* Ustawia długość danych w nagłówku */
+            /* Ustawia długość danych w nagłówku 'Content-Length' */
             this->request += this->httpContentLength;
+            /* Plus jeden znak na znak równości między kluczem a wartością */
             this->request += std::to_string((data.length() + this->httpDataKeyName.length() + 1));
             this->request += NEWLINE;
             this->request += NEWLINE;
@@ -114,22 +115,20 @@ std::string HttpRequestCreator::createRequest(const string &data) {
                 this->request += EQUAL_SIGN;
             }
 
-            this->meteoLog->warn(("CLASS::HttpRequestCreator::createRequest(data){ data="+data).c_str());
-
             /* Dodaje dane na końcu zapytania */
             this->request += data;
         }
 
-#ifdef SHOW_REQUEST
+#if TESTING_SHOW_REQUEST
 
         /* Wyświetla całe zapytanie w trybie testowania */
-        this->meteoLog->warn(this->request.c_str());
+        this->meteoLog->info(("TESTING_SHOW_REQUEST::"+this->request).c_str());
 
 #endif
 
     } else {
 
-        this->meteoLog->err("CLASS::HttpRequestCreator::creatRequest()->Błąd! Obsługiwane metody: POST, GET, PUT, PATCH.");
+        this->meteoLog->err("creatRequest()->Błąd! Obsługiwane metody: POST, GET, PUT, PATCH.");
 
         exit(EXIT_FAILURE);
 

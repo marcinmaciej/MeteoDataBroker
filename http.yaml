@@ -1,18 +1,10 @@
 %YAML 1.2
 ---
-HttpSleepTime    : 1
-HttpWaitNetwork  : 60
-HttpHostIp       : 95.211.144.65
-HttpHostName     : www.meteo-station.cba.pl
-HttpPort         : 80
-HttpAddressFamily: both
-HttpSocketType   : tcp
-HttpProtocol     : none
-HttpRequest      : "GET /bin/write_data.php HTTP/1.1
-Host:www.meteo-station.cba.pl
-Connection:close
-Content-Type:application/x-www-form-urlencoded;charset=utf-8
-Content-Length:#####
-
-data="
+HttpMethod: POST # Dodatkowo obsługiwane są GET, PUT, PATCH
+HttpPath: /index.php
+HttpDataKeyName: data # Nazwa klucza, do którego przypisane są pobrane dane
+HttpHeaders: # Nagłówki zapytania http — Host obowiązkowy
+  Host: mymeteo.cba.pl
+  Content-Type: application/x-www-form-urlencoded
+  Connection: Keep-Alive
 ---

@@ -1,0 +1,14 @@
+#!/bin/bash
+APPCONFIGSOURCE=./paths.yaml
+RS232SOURCE=./rs232.yaml
+HTTPSOURCE=./http.yaml
+SOCKETSOURCE=./socket.yaml
+DESTINATION=/etc/meteo-station/config
+
+cp -v $APPCONFIGSOURCE $DESTINATION
+
+cp -v $RS232SOURCE $DESTINATION
+
+cp -v $HTTPSOURCE $DESTINATION
+
+cp -v $SOCKETSOURCE $DESTINATION

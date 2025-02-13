@@ -1,63 +1,77 @@
 /**
- * @author  Created by Marcin Guziołek on 06.04.18.
+ * @author  Created by Marcin Guziołek on 23.11.21 r.
  */
 
 #ifndef METEOSTATIONDRIVERS_CONFIGMANAGER_H
 #define METEOSTATIONDRIVERS_CONFIGMANAGER_H
 
+#include <iostream> /* std::cout, std::cerr std::endl */
+#include <map> /* std::map */
+#include <vector> /* std::vector */
+#include <string> /* std::string */
+#include <cerrno>   /* errno */
+
+#include <yaml-cpp/yaml.h> /* YAML::const_iterator, YAML::Node, YAML::LoadFile(), YAML::isMap(), YAML::isNull() */
 
 #include "MyLog.h"
-#include "AppConfig.h"
-#include "SerialConfig.h"
-#include "HttpConfig.h"
-#include <map>
-#include <iterator>
-#include <fcntl.h>
-#include <sys/stat.h>
 
-class ConfigManager
-{
+class ConfigManager {
+
 public:
-    ConfigManager();
 
-    virtual ~ConfigManager();
+    explicit ConfigManager(const char *appConfigPath);
 
-    AppConfig *programConfig;
+    ConfigManager(ConfigManager &configManager);
 
-    SerialConfig *serialConfig;
+    ~ConfigManager();
 
-    HttpConfig *httpConfig;
+    /* Zwraca wartość żądanego parametru danych ustawień */
+    const std::string &getConfig(const std::string &param, int) const;
+
+    /* Zwraca nagłówki zapytania http jako mapa string-string */
+    const std::map<std::string, std::string> &getHttpHeaders() const;
+
+    /* Wczytuje wszystkie pliki z ustawieniami */
+    void loadAllConfigFiles();
+
+    /* Definiuje rodzaj ustawień dla metody 'getConfig',
+     * każda ze stałych odpowiada kolejno indeksowi vectora 'configMaps' przechowującej
+     * odpowiednio mapy z ustawieniami 'appConfig', 'socketConfig', 'serialConfig', 'httpConfig'
+     * */
+    enum {
+        APP, SOCKET, SERIAL, HTTP
+    };
+
 
 private:
 
-    map<const string, void (*)(const ConfigManager *, const string)> mapParamToMethod;
-
+    /* Obsługuje zapis logów do dziennika systemowego */
     MyLog *meteoLog;
 
-    const char COMMA = ',',
-            EQUALSIGN = '=';
+    /* Vector przechowuje mapy z ustawieniami */
+    std::vector<std::map<std::string, std::string>> configMaps;
 
+    /* Mapa dla ustawień połączenia szeregowego rs232 */
+    std::map<std::string, std::string> serialConfig;
 
-    const char *loadParams(const string &path) const;
+    /* Mapa dla ustawień połączenia http */
+    std::map<std::string, std::string> httpConfig;
 
-    const char *getDefaultSerialToSave();
+    /* Mapa dla ustawień połączenia socket */
+    std::map<std::string, std::string> socketConfig;
 
-    const char *getDefaultHttpToSave();
+    /* Mapa dla ustawień aplikacji */
+    std::map<std::string, std::string> appConfig;
 
-    void makeAllPaths();
+    /* Mapa dla nagłówków zapytania http */
+    std::map<std::string, std::string> httpHeaders;
 
-    void makeDir(const string & path);
+    /* Wczytuje konfigurację zapytania http */
+    bool loadHttpConfig(const std::string &path);
 
-    void saveDefault(const string &path, const char *config);
+    /* Wczytuje wybrany plik z ustawieniami */
+    bool loadAppConfig(std::map<std::string, std::string> &configMap, std::string &path);
 
-    bool loadSerialPort(const string &path);
-
-    bool loadHttp(const string &path);
-
-    bool getParams(const string &path) const;
-
-    void substringParams(const string *params, string::size_type *parStart, const string::size_type *parEnd, string *paramValue,
-                         string *paramName) const;
 };
 
 

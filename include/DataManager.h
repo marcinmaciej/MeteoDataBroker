@@ -1,47 +1,41 @@
 /**
- * @author  Created by Marcin Guziołek on 06.04.18.
+ * @author  Created by Marcin Guziołek on 14.12.21.
  */
 
 #ifndef _BUFFERMANAGER_H
 #define _BUFFERMANAGER_H
 
+#include <unistd.h>  /* write(), close(), access(), F_OK */
+#include <fcntl.h> /* open(),  O_WRONLY, O_APPEND, O_CREAT*/
+#include <string> /* std::string */
+#include <ctime> /* ctime(), time(), typ time_t */
+
 #include "MyLog.h"
-#include "ConfigManager.h"
 
 
-class BufferManager
-{
+class DataManager {
 
 public:
 
-    explicit BufferManager(const int mode, const ConfigManager *configManager);
+    explicit DataManager(std::string datFilePath);
 
-    // Copying constructor
-    BufferManager(BufferManager & bufferManager);
-
-    virtual ~BufferManager();
-
-    void writeBuffer(const char *data);
+    void saveData(const std::string &data);
 
 private:
 
-    string bufferPath;
+    std::string dataFilePath;
 
-    MyLog *meteoLog;
+    MyLog meteoLog;
 
-    int buffFileDesc;
+    int dataFileDesc = -1;
 
-    void closeBuffer();
+    int getDataFileDesc() const;
 
-    int getBuffFileDesc() const;
+    std::string getDataFilePath() const;
 
-    const char *getBufferFilePath() const;
+    void setDataFileDesc(int fd);
 
-    void setBufferFilePath(const char *bufferPath);
-
-    void setBuffFileDesc(int fd);
-
-    void openBuffer(int mode);
+    void openDataFile();
 
 };
 

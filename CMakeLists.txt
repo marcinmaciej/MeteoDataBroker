@@ -1,28 +1,25 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 project(MeteoStationDriver)
 
 set(CMAKE_CXX_STANDARD 11)
 
+set(LIBYAML_CPP /usr/local/lib/libyaml-cpp.a)
 
-include_directories(include)
-
+include_directories(include /usr/local/include)
 
 
 add_executable(meteo-station
-        include/BufferManager.h
-        include/DaemonsManager.h
-        include/HttpConnection.h
-        include/HttpTask.h
-        include/MyLog.h
-        include/MyDaemon.h
-        include/SerialTask.h
-        include/Task.h
-        src/BufferManager.cpp
+        src/ConfigManager.cpp
+        src/DataManager.cpp
         src/DaemonsManager.cpp
-        src/HttpConnection.cpp
+        src/Connection.cpp
+        src/HttpRequestCreator.cpp
         src/HttpTask.cpp
         src/MyLog.cpp
         src/MyDaemon.cpp
         src/SerialTask.cpp
         src/Task.cpp
         main.cpp)
+
+
+target_link_libraries(meteo-station PRIVATE ${LIBYAML_CPP})

@@ -1,110 +1,106 @@
 /**
- * @author  Created by Marcin Guziołek on 06.04.18.
+ * @author  Created by Marcin Guziołek on 06.12.21.
  */
+
 
 #include "HttpTask.h"
 
-HttpTask::HttpTask(const ConfigManager *configManager) : Task(configManager)
-{
 
-    Task::logName = "MS-HttpdTaskClass";
+HttpTask::HttpTask(const ConfigManager &configManager, int pipeDesc) : Task(configManager),
+                                                                       http(configManager),
+                                                                       PIPEDESC(pipeDesc) {
 
-    this->meteoLog = new MyLog("MS-HttpTaskClass");
-
-    this->http = new HttpConnection(this->getConfigManager());
-
-    this->setBytesToRead(this->getConfigManager()->httpConfig->getDataLength());
-}
-
-void HttpTask::task(const char *logName)
-{
-
-    Task::logName = logName;
-
-    /* Connect to the server */
-    if (this->http->httpConnect())
-    {
-        size_t readBytesNum = 0;
-        auto *readData = new string();
-
-        this->bufferManager = new BufferManager(O_RDONLY, this->getConfigManager());
-
-        /* Read data from buffer file */
-        *readData = this->bufferManager->readBuffer();
-
-        /* Get number of data length */
-        readBytesNum = readData->length();
-
-#if SHOW_HTTP
-        auto *ms = new string("Bytes to send = ");
-        *ms += to_string(readBytesNum);
-        *ms += " content = ";
-        *ms += *readData;
-        this->meteoLog->warn(ms->c_str());
-        delete ms;
-#endif // SHOW_HTTP
-
-        try
-        {
-            if (!readData->empty())
-            {
-
-                if (readBytesNum == this->getBytesToRead())
-                {
-                    /* Send data to the server */
-                    if (this->http->sendData(readData->c_str()))
-                    {
-
-                        /* Update seek offset if data sent */
-                        this->bufferManager->updateOffset(this->getBytesToRead());
-                    }
-
-                }
-                else
-                {
-                    sleep((this->getConfigManager()->httpConfig->getSleepTime()));
-                }
-            }
-
-            this->http->httpClose();
-
-            delete readData;
-
-            sleep(this->getConfigManager()->httpConfig->getSleepTime());
-
-        }
-        catch (...)
-        {
-            this->meteoLog->err(strerror(errno));
-        }
-    }
-    else
-    {
-        sleep(this->getConfigManager()->httpConfig->getWaitNetwork());
-    }
+    this->meteoLog = MyLog("CLASS::HttpTask");
 
 }
 
-const ConfigManager *HttpTask::getConfigManager()
-{
+
+std::string HttpTask::readPipe() {
+
+    std::string msgTitle = "readPipe()";
+    ssize_t bytesRead;
+    size_t serialDataLength;
+
+    /* Przechwytuje błąd 'stoi' */
+    try {
+
+        serialDataLength = std::stoi(
+                this->getConfigManager().getConfig("SerialDataLength", this->getConfigManager().SERIAL));
+
+    } catch (std::exception &e) {
+
+        this->meteoLog.err((msgTitle + "{ std::stoi() } = " + e.what()).c_str());
+    }
+
+    auto *dataRead = new char[serialDataLength]();
+
+    /* Odczyt z potoku */
+    bytesRead = read(this->PIPEDESC, dataRead, serialDataLength);
+
+    /* Zapisuje błąd, żeby go nie utracić */
+    int saved_err = errno;
+
+    std::string result(dataRead);
+
+    delete[] dataRead;
+
+    /* Funkcja 'read' zwróciła błąd */
+    if (bytesRead == -1) {
+
+        this->meteoLog.err((msgTitle + "{ read(pipeDesc,buf,len) = -1 }: ").c_str(), saved_err);
+
+        std::exit(EXIT_FAILURE);
+
+        /* Funkcja 'read' podczas czytania z pustego bufora potoku blokuje zasób i czeka na dane,
+           jednak gdy zwraca 0 (EOF), oznacza to, że wszystkie uchwyty zapisu do potoku zostały zamknięte,
+           więc restartuje demony w celu utworzenia nowego potoku */
+    } else if (bytesRead == 0) {
+
+        this->meteoLog.err((msgTitle + "{ read(pipeDesc,buf,len) = 0 }: ").c_str(), saved_err);
+
+        /* Restartuje demony */
+        restartOnBrokenPipe(this->getConfigManager(), this->meteoLog, 1, msgTitle);
+
+    }
+
+    return result;
+}
+
+
+void HttpTask::task() {
+
+    if (!http.isConnected()) {
+
+        http.connectServer();
+
+    } else {
+
+        std::string data = this->readPipe();
+
+        if (!data.empty()) {
+            this->http.sendData(data);
+        }
+
+        /* Przechwytuje błąd 'std::stoi' */
+        try {
+
+            /* Usypia proces na zadaną liczbę sekund */
+            sleep(std::stoi(this->getConfigManager().getConfig("SocketSleepTime", this->getConfigManager().SOCKET)));
+
+        } catch (std::exception &e) {
+
+            this->meteoLog.err("task(){ sleep(stoi()) } = ");
+        }
+    }
+}
+
+const ConfigManager &HttpTask::getConfigManager() const {
     return this->configManager;
 }
 
-const size_t HttpTask::getBytesToRead() const
-{
-    return this->bytesToRead;
+HttpTask::~HttpTask() {
+
+    close(this->PIPEDESC);
+
 }
 
-void HttpTask::setBytesToRead(const size_t bytesToRead)
-{
-    this->bytesToRead = bytesToRead;
-}
-
-HttpTask::~HttpTask()
-{
-    this->meteoLog->err("BYE BYE from HttpTaskClass");
-
-    delete this->http;
-    delete this->meteoLog;
-    delete this->bufferManager;
-}

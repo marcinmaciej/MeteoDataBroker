@@ -5,71 +5,89 @@
 #ifndef HTTPCONNECTION_H
 #define HTTPCONNECTION_H
 
-#include <netdb.h>
-#include <sys/socket.h>
+#include <netdb.h> /* getaddrinfo(), freeaddrinfo(), connect(), socket(), getprotobyname(),
+                    * struct protoent, struct addrinfo,
+                    * AI_NUMERICHOST, AI_NUMERICSERV,
+                    * AF_UNSPEC, AF_INET, AF_INET6,
+                    * SOCK_DGRAM, SOCK_RAW, SOCK_STREAM
+                    * */
 
+#include <csignal> /* struct sigaction, sigaction(), sigemptyset(), SIG_IGN, SIGPIPE */
+#include <cstring>  /* memset */
+#include <unistd.h>  /* write(), close(), sleep() */
+#include <string> /* std::string */
+
+#include "MyLog.h"
 #include "ConfigManager.h"
+#include "HttpRequestCreator.h"
 
-class HttpConnection {
+extern std::string toLowerCase(const std::string &pstr, MyLog &meteoLog);
+
+class Connection {
 
 public:
-    explicit HttpConnection(const ConfigManager &configManager);
 
-    HttpConnection(HttpConnection &httpConnection);
+    explicit Connection(const ConfigManager &configManager);
 
-    ~HttpConnection();
+    Connection(Connection &connection);
 
-    int httpConnect();
+    ~Connection();
+
+    void connectServer();
 
     bool sendData(std::string &data);
 
-    void httpClose();
+    void closeConnection();
+
+    bool isConnected() const;
 
 private:
 
+    const ConfigManager &configManager;
+
     MyLog *meteoLog;
+
+    HttpRequestCreator *httpRequestCreator;
+
+    bool connected = false;
 
     struct addrinfo *hints;
 
-    /* W pliku konfiguracyjnym "/etc/meteo-station/config/http.yaml"
-     * w zapytaniu http w nagłówku content-length
-     * zamiast liczby określającej długość zawartości zapytania,
-     * której jeszcze nie znamy znajduje się ogranicznik "#####"
-     *  */
-    std::string placeHolder = "#####";
 
-    std::string hostName,
-            hostIp,
-            port,
-            request,
-            requestContent,
-            dataKeyName;
+    std::string hostIp, /* Numeryczny adres hosta jako ciąg czterech liczb odseparowanych kropkami */
+    port, /* Numer portu, na którym host udostępnia serwis */
+    httpRequest; /* Zapytanie http */
 
-    int socketDescriptor = -1,
 
-    /* Używaj protokołu TCP  */
-    socketType = SOCK_STREAM,
+    int socketDescriptor = -1, /* Uchwyt do gniazda */
 
-    /* 0 dla opcji "none" */
-    protocol = 0,
+    socketType = SOCK_STREAM,  /* Używaj gniazda typu protokół strumieniowy */
 
-    /* Wymagaj numercznego adresu hosta aby uniknąć potencjalnych długich wywołań lookup */
-    flags = AI_NUMERICHOST,
+    protocol = 0, /* Używaj jakiegokolwiek protokołu dla typu gniazda 'SOCK_STREAM' */
 
-    /* Używaj obu rodzin adresowych */
-    family = AF_UNSPEC;
+    /* Wymagaj numerycznego adresu hosta, nie wyszukuj nazwy hosta, aby
+     * uniknąć wszelkich potencjalnie długich wyszukiwań adresów hostów |
+     * nie konwertuj numeru portu do nazwy
+     * */
+    flags = AI_NUMERICHOST | AI_NUMERICSERV,
+
+
+            family = AF_UNSPEC,  /* Używa obu rodzin protokołów ipv4 i ipv6 */
+
+    waitNetworkTime; /* Czas uśpienia w oczekiwaniu na połączenie internetowe */
 
     size_t bytesToSend = 0;
 
-    void createSocket(int ai_family);
+    bool createSocket(int ai_family, int ai_socktype, int ai_protocol);
 
 
     /* Ustaw lub pobierz parametry socket za pomocą tych metod */
+
+    /* Getters */
+
     int getFlags() const;
 
     addrinfo *getHints() const;
-
-    std::string getHostName() const;
 
     std::string getHostIp() const;
 
@@ -83,11 +101,16 @@ private:
 
     int getSocketDescriptor() const;
 
+    std::string getRequest() const;
+
+
+    /* Setters */
+
+    void setRequest(const std::string &prequest);
+
     void setHints();
 
     void setAddressFamily(const std::string &pfamily);
-
-    void setHostName(const std::string &phostName);
 
     void setHostIp(const std::string &phostIp);
 
@@ -99,27 +122,12 @@ private:
 
     void setProtocol(const std::string &pprotocol);
 
-    void setFlags(int pflags);
     /*------------------------------------------*/
 
-    /* Metody do pobierania, ustawiania i przetwarzania zapytania http */
-    std::string getRequest() const;
+    int getWaitNetwork() const;
 
-    void setRequest(const std::string &prequest);
+    void waitNetwork();
 
-    const std::string &mergeRequestAndData(std::string &data);
-
-    std::string getDataKeyName() const;
-
-    void setDataKeyName(const std::string &pkeyname);
-
-    size_t getBytesToSend();
-
-    void setBytesToSend(size_t pbytesToSend);
-
-    /* Metody pomocnicze */
-
-    std::string toLowerCase(const std::string &pstring);
 };
 
 #endif // HTTPCONNECTION_H

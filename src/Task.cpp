@@ -4,12 +4,5 @@
 
 #include "Task.h"
 
-Task::Task(const ConfigManager * configManager)
-{
-    this->configManager = configManager;
-    this->logName = new char[1024];
-    this->logName = this->configManager->programConfig->getAppName().c_str();
-    this->meteoLog = new MyLog(this->logName);
-
-}
+Task::Task(const ConfigManager &configManager):configManager(configManager) {}
 

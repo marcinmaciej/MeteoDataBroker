@@ -1,40 +1,42 @@
 /**
- * @author  Created by Marcin Guziołek on 06.04.18.
+ * @author  Created by Marcin Guziołek on 06.12.21.
  */
 
 #ifndef HTTPTASK_H
 #define HTTPTASK_H
 
-#define SHOW_HTTP true
+#include <cerrno>   /* errno */
+#include <unistd.h> /* read(), sleep(), close(), */
+#include <string> /* std::string */
 
 
-#include "HttpConnection.h"
-#include "BufferManager.h"
-
+#include "Connection.h"
 #include "Task.h"
 
-class HttpTask: public Task
+extern void
+restartOnBrokenPipe(const ConfigManager &configManager, MyLog &meteoLog, int whichDaemon, std::string &msgTitle);
+
+class HttpTask : public Task
 {
 
 public:
-    explicit HttpTask(const ConfigManager * configManager);
+
+    HttpTask(const ConfigManager &configManager, int pipeDesc);
+
     ~HttpTask() override;
 
-    void task(const char * logName) override;
+    void task() override;
 
 
 private:
 
-    size_t bytesToRead;
+    int PIPEDESC;
 
-    HttpConnection * http;
-    BufferManager * bufferManager;
+    Connection http;
 
-    const ConfigManager * getConfigManager();
+    const ConfigManager & getConfigManager() const;
 
-    const size_t getBytesToRead() const;
-
-    void setBytesToRead(size_t bytesToRead);
+    std::string readPipe();
 
 };
 

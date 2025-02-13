@@ -5,67 +5,72 @@
 #ifndef DAEMONSMANAGER_H
 #define DAEMONSMANAGER_H
 
-#include <csignal>
+#include <csignal> /* int kill(__pid_t __pid, int __sig), SIGTERM, */
+#include <sys/prctl.h> /* prctl(int option,...) kontrola wywołania procesu, PR_SET_NAME - opcja ustawia nazwę procesu  */
+#include <string> /* std::string */
+#include <unistd.h>  /*  read(), fork(), close(), pipe()  */
+#include <fcntl.h> /* open(), O_RDONLY */
+#include <cerrno>   /* errno */
 
 #include "ConfigManager.h"
 #include "MyDaemon.h"
 #include "HttpTask.h"
 #include "SerialTask.h"
 
-class DaemonsManager
-{
+class DaemonsManager {
+
 public:
 
-    explicit DaemonsManager(ConfigManager * configManager);
+    explicit DaemonsManager(const ConfigManager &configManager);
+
+    // Copying constructor
+    DaemonsManager(DaemonsManager &daemonsManager);
 
     ~DaemonsManager();
 
-    void startDaemons();
+    void init();
 
     void restartDaemons();
 
     void killAll();
 
-    void setPidFileDirPath(const string *pidFilePath);
+    const ConfigManager &getConfigManager() const;
 
-    ConfigManager *getConfigManager() const;
-
-    void setConfigManager(ConfigManager *configManager);
 
 private:
 
-    const unsigned char RS232D = 0,
-            HTTPD = 1;
+    MyLog *meteoLog;
 
-    const string *pidFilePath,
-            *daemonsNames;
+    const ConfigManager &configManager;
+
+    /*
+     * Wartości stałych odpowiadają wartościom indeksów w tablicy uchwytów potoku
+     * łączącego oba demony. Demon "rs232d" zapisuje do potoku, 1 jest zapisem,
+     * a demon "httpd" odczytuje z potoku, 0 jest odczytem
+     * */
+    enum {
+        HTTPD, RS232D
+    };
+
+    /* Odpowiednio zapisane nazwy demonów */
+    const std::string daemonsNames[2] = {"httpd", "rs232d"};
+
+    const std::string *pidFileDirPath;
 
     pid_t *daemonsPids;
 
-    ConfigManager * configManager;
+    const std::string *getPidFileDirPath() const;
 
-    const MyDaemon *httpd,
-            *rs232d;
+    pid_t *getPid(unsigned char daemonPidIndex) const;
 
-    MyLog *meteoLog;
-
-    const string getPidFileDirPath() const;
-
-    const string getDaemonName(unsigned char daemon) const;
-
-    pid_t *getPid(unsigned char daemon) const;
-
-    void setDaemonsNames(const string *daemonsNames);
-
-    void setPid(unsigned char daemon, pid_t pid);
+    void setPid(unsigned char daemonPidIndex, pid_t pid);
 
     bool isRunning(const pid_t *daemonPid);
 
     void killDaemon(const pid_t *daemonPid);
 
-    void getSavedPid(unsigned char daemon);
+    void getSavedPid(unsigned char daemonNameIndex);
 
-    void collectGarbage();
 };
 
 #endif // DAEMONSMENAGER_H

@@ -1,83 +1,99 @@
 /**
- * @author  Created by Marcin Guziołek on 06.04.18.
+ * @author  Created by Marcin Guziołek on 10.12.21.
  */
 
 #ifndef RS232TASK_H
 #define RS232TASK_H
 
-#define SHOW_SERIAL false
+
+#include <termios.h> /* struct termios */
+#include <sys/ioctl.h> /* ioctl(), FIONREAD */
+#include <fcntl.h> /* open(), O_RDONLY, O_NOCTTY, O_NONBLOCK */
+#include <csignal> /* sigemptyset(), SIGPIPE, SIG_SETMASK */
+#include <cerrno>   /* errno */
+#include <map> /* std::map */
+#include <unistd.h> /* sleep(), */
+#include <ctime> /* time(), ctime() , typ time_t */
 
 #include "Task.h"
+#include "DataManager.h"
 
-#include "BufferManager.h"
+
+extern std::string toLowerCase(const std::string &pstr, MyLog &meteoLog);
+extern void
+restartOnBrokenPipe(const ConfigManager &configManager, MyLog &meteoLog, int whichDaemon, std::string &msgTitle);
 
 
-class SerialTask : public Task
-{
+class SerialTask : public Task {
 
 public:
-    explicit SerialTask(const ConfigManager *configManager);
+    explicit SerialTask(const ConfigManager & configManager, int pipeDesc);
+
+    SerialTask(SerialTask &serialTask);
 
     ~SerialTask() override;
 
-    void task(const char *logName) override;
+    void task() override;
 
 
 private:
 
-    BufferManager *bufferManager;
+    DataManager *bufferManager;
 
-    const char *serialPortPath;
+    std::string serialPortPath;
 
-    int fileDescriptor,
-            bytesAvailable;
+    int serialFileDescriptor = -1,
+        PIPEDESC;
 
-    char *buffer;
+    size_t bytesNumToRead = 0;
 
-    size_t bytesNumToRead;
+    std::map<const string, unsigned int> mapDataBits;
+    std::map<const string, speed_t> mapSpeed;
 
-    map<const string, int> mapDataBits;
-    map<const string, speed_t> mapSpeed;
+    struct termios options{};
 
-    struct termios options;
+    void writePipe(const std::string &);
 
-    const char *getSerialPortPath() const;
+    const std::string &getSerialPortPath() const;
 
-    void setSerialPortPath(const char *serialPortPath);
+    void setSerialPortPath(const std::string &pserialPortPath);
 
-    const size_t getBytesNumToRead() const;
+    size_t getBytesNumToRead() const;
 
-    void setBytesNumToRead(const size_t bytesNumToRead);
+    void setBytesNumToRead(size_t pbytesNumToRead);
 
-    const ConfigManager *getConfigManager() const;
+    const ConfigManager & getConfigManager() const;
 
-    int getFileDesc();
+    int getSerialFileDesc() const;
 
-    void setFileDesc(int fd);
+    void setSerialFileDesc(int fd);
 
-    const char * readPort();
+    std::string * readSerialPort();
 
-    void setPortConfig();
+    void setSerialPortConfig();
 
-    void closePort();
+    void closeSerialPort() const;
 
-    void setPortStopBits();
+    void setSerialPortStopBits();
 
-    void setPortParity();
+    void setSerialPortParity();
 
-    void setPortFlowControl();
+    void setSerialPortFlowControl();
 
-    void setPortDataBits();
+    void setSerialPortDataBits();
 
-    void setPortRawInput();
+    void setSerialPortRawInput();
 
-    void setPortNoMappingChars();
+    void setSerialPortNoMappingChars();
 
-    void setPortReadMin();
+    void setSerialPortReadMin();
 
-    void setPortSpeed();
+    void setSerialPortSpeed();
 
-    void openPort();
+    void openSerialPort();
+
+    void messageAndSleep(int saved_errno,std::string &msgTitle);
+
 };
 
 #endif // RS232TASK_H

@@ -1,11 +1,13 @@
 %YAML 1.2
 ---
-SerialSleepTime: 1
-SerialDataLength: 1024
-SerialPort: /dev/ttyUSB0
-SerialSpeed: 9600
-SerialDataBits: 8
-SerialStopBits: 1
-SerialParity: none
-SerialFlowControl: none
+SerialSleepTime: 2 # liczba sekund uśpienia procesu
+SerialDataLength: 10 # liczba bajtów odczytywanych danych
+#SerialPort: /dev/ttyAMA0 # ścieżka do pliku urządzenia na raspberryPi
+SerialPort: /dev/ttyUSB0 # ścieżka do pliku urządzenia na laptopie
+SerialSpeed: 9600 # 50, 75, 110, 300, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200; prędkość przesyłu danych
+SerialDataBits: 8 # 5, 6, 7, 8; liczba bitów na znak
+SerialStopBits: 1 # 1, 2; liczba bitów stopu
+SerialParity: none # none, odd, even; nie używane
+SerialFlowControl: none # none, xoff/xon, xon/xoff, cts/rts, rts,cts; nie używane
+SerialWaitPort: 60 # liczba sekund w oczekiwaniu na podłączenie urządzenia
 ---

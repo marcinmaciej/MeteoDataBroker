@@ -5,8 +5,10 @@
 #ifndef METEOSTATIONDRIVER_HTTPREQUESTCREATOR_H
 #define METEOSTATIONDRIVER_HTTPREQUESTCREATOR_H
 
+
+#include <string> /* std::string */
+#include <unistd.h> /* gethostname() */
 #include "ConfigManager.h"
-#include <string>
 #include "MyLog.h"
 
 class HttpRequestCreator {

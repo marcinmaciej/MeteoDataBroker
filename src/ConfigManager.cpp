@@ -1,402 +1,234 @@
-/** @author  Created by Marcin Guziołek on 06.04.18.
- *  @brief Class ConfigManager manages app configuration
+/** @author  Created by Marcin Guziołek on 23.11.21 r.
+ *  @brief Klasa ConfigManager dostarcza ustawienia aplikacji.
  *
  */
 
 #include "ConfigManager.h"
 
-/** @brief functions for configuring serial port
+/** @brief Konstruktor klasy ConfigManager
  *
- *  @param type:const ConfigManager * ,name:manager
- *   @param type:const string, name:paramVal
+ *  @param const char * appConfigPath - Ścieżka do pliku konfiguracyjnego YAML 'paths.yaml'.
  */
-void serialSetPort(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setPort(paramVal);
-}
+ConfigManager::ConfigManager(const char *appConfigPath) : meteoLog(new MyLog("CLASS::ConfigManager")) {
 
-void serialSetSpeed(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setSpeed(paramVal);
-}
+    this->appConfig["appConfigPath"] = appConfigPath;
 
-void serialSetDataBits(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setDataBits(paramVal);
-}
-
-void serialSetStopBits(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setStopBits(paramVal);
-}
-
-void serialSetParity(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setParity(paramVal);
-}
-
-void serialSetFlowControl(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setFlowControl(paramVal);
 }
 
 
-void serialSetSleepTime(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setSleepTime(paramVal);
-}
-
-void serialSetDataLength(const ConfigManager *manager, const string paramVal)
-{
-    manager->serialConfig->setDataLength(paramVal.c_str());
-}
-
-/** @brief functions for configuring http connection
+/** @brief Funkcja wczytująca plik konfiguracyjny YAML
  *
- *  @param manager
- *  @param paramVal
- */
-void httpSetHostIp(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setHostIp(paramVal);
-}
-
-void httpSetHostName(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setHostName(paramVal);
-}
-
-void httpSetPort(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setPort(paramVal);
-}
-
-void httpSetAddressFamily(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setAddressFamily(paramVal);
-}
-
-void httpSetSocketType(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setSocketType(paramVal);
-}
-
-void httpSetProtocol(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setProtocol(paramVal);
-}
-
-void httpSetRequest(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setRequest(paramVal);
-}
-
-void httpSetSleepTime(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setSleepTime(paramVal);
-}
-
-void httpSetWaitNetwork(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setWaitNetwork(paramVal);
-}
-
-void httpSetDataLength(const ConfigManager *manager, const string paramVal)
-{
-    manager->httpConfig->setDataLength(paramVal);
-}
-
-/** @brief ConfigManager constructor
+ * @param map<std::string, std::string> &configMap - Referencja do mapy, w której zapisane zostają ustawienia.
  *
- */
-ConfigManager::ConfigManager()
-{
-    this->meteoLog = new MyLog("MS-ConfigManager");
-
-    this->programConfig = new AppConfig();
-
-    this->serialConfig = new SerialConfig();
-
-    this->httpConfig = new HttpConfig();
-
-/** @brief A map with serial port params of type string and setters functions
-*
-*/
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialport", serialSetPort));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialspeed", serialSetSpeed));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialdatabits", serialSetDataBits));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialstopbits", serialSetStopBits));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialparity", serialSetParity));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialflowcontrol", serialSetFlowControl));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialsleeptime", serialSetSleepTime));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("serialdatalength", serialSetDataLength));
-
-/** @brief The map with http connection params of type string and setters functions
+ * @param std::string &path  - Ścieżka do pliku konfiguracyjnego YAML.
  *
+ * @return bool
  */
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httphostip", httpSetHostIp));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httphostname", httpSetHostName));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpport", httpSetPort));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpaddressfamily",
-                                                                              httpSetAddressFamily));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpsockettype", httpSetSocketType));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpprotocol", httpSetProtocol));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httprequest", httpSetRequest));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpsleeptime", httpSetSleepTime));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpwaitnetwork", httpSetWaitNetwork));
-    this->mapParamToMethod.insert(
-            pair<const string, void (*)(const ConfigManager *, const string)>("httpdatalength", httpSetDataLength));
+bool ConfigManager::loadAppConfig(std::map<std::string, std::string> &configMap, std::string &path) {
 
-/** @brief The params loading and initiating block for serial port
- *
- */
-    if (!this->loadSerialPort(this->programConfig->getRs232ConfigPath()))
-    {
-        this->makeAllPaths();
-        this->saveDefault(this->programConfig->getRs232ConfigPath(), this->getDefaultSerialToSave());
-    }
+    bool isLoaded = false;
 
-/** @brief The params loading and initiating block for http connection
- *
- */
-    if (!this->loadHttp(this->programConfig->getHttpConfigPath()))
-    {
-        this->makeAllPaths();
-        this->saveDefault(this->programConfig->getHttpConfigPath(), this->getDefaultHttpToSave());
-    }
-}
+    try {
 
-const char *ConfigManager::getDefaultSerialToSave()
-{
-    string config;
+        YAML::Node newSerialConfig = YAML::LoadFile(path);
 
-    config = "SerialSleepTime=" + to_string(this->serialConfig->getSleepTime());
-    config += ",SerialDataLength=" + to_string(this->serialConfig->getDataLength());
-    config += ",SerialPort=" + this->serialConfig->getPort();
-    config += ",SerialSpeed=" + this->serialConfig->getSpeed();
-    config += ",SerialDataBits=" + this->serialConfig->getDataBits();
-    config += ",SerialStopBits=" + this->serialConfig->getStopBits();
-    config += ",SerialParity=" + this->serialConfig->getParity();
-    config += ",SerialFlowControl=" + this->serialConfig->getFlowControl();
-    /* Add character marker closing the string of parameters */
-    config += ';';
+        if (!newSerialConfig.IsNull() && newSerialConfig.IsMap()) {
 
-    return config.c_str();
-}
+            for (YAML::const_iterator it = newSerialConfig.begin(); it != newSerialConfig.end(); ++it) {
 
-const char *ConfigManager::getDefaultHttpToSave()
-{
-    string config;
+                configMap[it->first.as<std::string>()] = it->second.as<std::string>();
 
-    config = "HttpDataLength=" + to_string(this->httpConfig->getDataLength());
-    config += ",HttpSleepTime=" + to_string(this->httpConfig->getSleepTime());
-    config += ",HttpWaitNetwork=" + to_string(this->httpConfig->getWaitNetwork());
-    config += ",HttpHostIp=" + this->httpConfig->getHostIp();
-    config += ",HttpHostName=" + this->httpConfig->getHostName();
-    config += ",HttpPort=" + this->httpConfig->getPort();
-    config += ",HttpAddressFamily=" + this->httpConfig->getAddressFamily();
-    config += ",HttpSocketType=" + this->httpConfig->getSocketType();
-    config += ",HttpProtocol=" + this->httpConfig->getProtocol();
-    config += ",HttpRequest=" + this->httpConfig->getRequest();
-    /* Add character marker closing the string of parameters */
-    config += ';';
-
-    return config.c_str();
-}
-
-void ConfigManager::saveDefault(const string &path, const char *config)
-{
-    try
-    {
-        int fd;
-        ssize_t bw = 0,
-                btw = 0;
-
-        btw = strlen(config);
-
-        fd = open(path.c_str(), O_CREAT | O_WRONLY, 0777);
-        if (fd == -1)
-        {
-            throw errno;
-        }
-
-        bw = write(fd, config, btw);
-
-        close(fd);
-
-        if (bw != btw)
-        {
-            throw errno;
-        }
-
-    }
-    catch (...)
-    {
-        this->meteoLog->err(strerror(errno));
-    }
-}
-
-bool ConfigManager::loadSerialPort(const string &path)
-{
-    return getParams(path);
-}
-
-bool ConfigManager::getParams(const string &path) const
-{
-    try
-    {
-        string params,
-                paramValue,
-                paramName;
-
-        string::size_type parStart = 0,
-                parEnd = 0,
-                length = 0;
-
-        params = loadParams(path);
-
-        if (params.empty())
-        {
-            return false;
-        }
-
-        length = params.length();
-
-        while (string::npos != (parEnd = params.find(COMMA, parStart)))
-        {
-            substringParams(&params, &parStart, &parEnd, &paramValue, &paramName);
-
-            mapParamToMethod.find(paramName)->second(this, paramValue);
-        }
-
-        /* Get last param behind the last comma */
-        substringParams(&params, &parStart, &length, &paramValue, &paramName);
-
-        mapParamToMethod.find(paramName)->second(this, paramValue);
-
-        return true;
-
-    } catch (...)
-    {
-        meteoLog->err(strerror(errno));
-    }
-}
-
-void
-ConfigManager::substringParams(const string *params, string::size_type *parStart, const string::size_type *parEnd,
-                               string *paramValue,
-                               string *paramName) const
-{
-    string param;
-    string::size_type subStart = 0;
-    string::size_type parLength = 0;
-
-    parLength = *parEnd - *parStart;
-
-    param = params->substr(*parStart, parLength); /* Get substring to first comma key=value */
-
-    subStart = param.find(EQUALSIGN); /* Find position of equal sign */
-
-    *paramValue = param.substr(subStart + 1, param.length()); /* Get substring of value */
-
-    *paramName = param.substr(0, subStart);
-
-    *parStart += parLength + 1;
-
-    transform(paramName->begin(), paramName->end(), paramName->begin(),
-              ::tolower); /* Change all letters to lower */
-}
-
-bool ConfigManager::loadHttp(const string &path)
-{
-    return getParams(path);
-}
-
-const char *ConfigManager::loadParams(const string &path) const
-{
-    FILE *fd;
-    char *line = nullptr;
-    ssize_t resultLen = 0;
-    size_t len = 0;
-    auto *allLines = new string();
-
-    try
-    {
-        fd = fopen(path.c_str(), "r");
-        if (!fd)
-        {
-            return "";
-        }
-
-        while ((resultLen = getline(&line, &len, fd)) > -1)
-        {
-            len = strlen(line);
-
-            if (resultLen != len)
-            {
-                throw errno;
             }
-            *allLines += line;
-            line = nullptr;
+
+            isLoaded = true;
+        }
+    } catch (std::exception &e) {
+
+        std::cerr << "CLASS::ConfigManager::loadAppConfig(" << path << ")::" << e.what() << std::endl;
+
+        std::exit(EXIT_FAILURE);
+
+    }
+
+
+    return isLoaded;
+}
+
+/** @brief Funkcja ładująca plik konfiguracyjny 'http.yaml' z ustawieniami zapytania http
+ *
+ * @details Jeśli jeden z elementów jest mapą, iteruje po niej, są to nagłówki zapytania http.
+ * Zapisuje je w osobnej mapie z nagłówkami 'httpHeaders', pozostałe elementy
+ * zapisuje w mapie 'httpConfig'
+ *
+ * @param const std::string &path - Ścieżka do pliku Konfiguracyjnego YAML
+*/
+bool ConfigManager::loadHttpConfig(const std::string &path) {
+
+    bool isLoaded = false;
+
+    try {
+
+        /* Tworzy YAML node z wczytanego pliku konfiguracyjnego dla zapytania http. */
+        YAML::Node newHttpConfig = YAML::LoadFile(path);
+
+        /* Jeśli node jest mapą i nie jest pusty, iteruje po mapie. */
+        if (!newHttpConfig.IsNull() && newHttpConfig.IsMap()) {
+
+            for (YAML::const_iterator it = newHttpConfig.begin(); it != newHttpConfig.end(); ++it) {
+
+                if (it->second.IsMap()) {
+
+                    for (YAML::const_iterator ite = it->second.begin(); ite != it->second.end(); ++ite) {
+
+                        /* Zapisuje do mapy 'httpHeaders' nagłówki zapytania http.  */
+                        this->httpHeaders[ite->first.as<std::string>()] = ite->second.as<std::string>();
+
+                    }
+
+                } else {
+
+                    /* Zapisuje do mapy 'httpConfig' inne elementy ustawień niż nagłówki zapytania http. */
+                    this->httpConfig[it->first.as<std::string>()] = it->second.as<std::string>();
+
+                }
+            }
+
+            isLoaded = true;
         }
 
-        fclose(fd);
+    } catch (std::exception &e) {
 
+        std::cerr << "CLASS::ConfigManager::loadHttpConfig(path)::" << e.what() << std::endl;
 
-    } catch (...)
-    {
-        this->meteoLog->err(strerror(errno));
+        std::exit(EXIT_FAILURE);
+
     }
 
-    allLines->erase(allLines->rfind(';'));
-    fd = nullptr;
-
-    return allLines->c_str();
+    return isLoaded;
 }
 
-void ConfigManager::makeDir(const string &path)
-{
-    try
-    {
 
-        mkdir(path.c_str(), 0744);
+const std::string &ConfigManager::getConfig(const std::string &param, int whatConfig) const {
 
-    } catch (...)
-    {
-        this->meteoLog->err(strerror(errno));
+    auto *value = new std::string;
+
+    try {
+
+        if (!param.empty()) {
+
+            if (whatConfig >= 0 && (whatConfig <= configMaps.size() - 1)) {
+
+                switch (whatConfig) {
+                    case APP:
+                        *value = this->configMaps[APP].at(param);
+                        break;
+                    case SOCKET:
+                        *value = this->configMaps[SOCKET].at(param);
+                        break;
+                    case SERIAL:
+                        *value = (this->configMaps[SERIAL]).at(param);
+                        break;
+                    case HTTP:
+                        *value = this->configMaps[HTTP].at(param);
+                        break;
+                    default:;
+
+                }
+            }
+        }
+
+    } catch (std::exception &e) {
+
+        std::string msg = "::getConfig(param,whatConfig) => param="
+                          + param
+                          + "  whatConfig="
+                          + std::to_string(whatConfig);
+
+        this->meteoLog->err(msg.c_str());
+
+        exit(EXIT_FAILURE);
+    }
+
+    return *value;
+}
+
+
+const std::map<std::string, std::string> &ConfigManager::getHttpHeaders() const {
+
+    return this->httpHeaders;
+
+}
+
+
+void ConfigManager::loadAllConfigFiles() {
+
+    if (this->loadAppConfig(this->appConfig, this->appConfig.at("appConfigPath"))) {
+
+        /** @brief  Loading configuration file for serialFileDescriptor port.
+         *  On success loading and do initiating params. Exit on failure.
+        */
+        if (!this->loadAppConfig(this->serialConfig, this->appConfig.at("rs232ConfigPath"))) {
+
+            std::cerr << "Brak pliku 'rs232.yaml' lub zły format pliku yaml!" << std::endl;
+
+            std::exit(EXIT_FAILURE);
+
+        } else {
+
+            std::cout << "Plik 'rs232.yaml' wczytany!" << std::endl;
+        }
+
+        /** @brief Loading configuration file for http httpRequest.
+         *  On success loading and do initiating params. Exit on failure.
+        */
+        if (!this->loadHttpConfig(this->appConfig.at("httpConfigPath"))) {
+
+            std::cerr << "Brak pliku 'http.yaml' lub zły format pliku yaml!" << std::endl;
+
+            exit(EXIT_FAILURE);
+
+        } else {
+
+            std::cout << "Plik 'http.yaml' wczytany!" << std::endl;
+        }
+
+        /** @brief Loading configuration file for socket connection.
+         *  On success loading and do initiating params. Exit on failure.
+        */
+        if (!this->loadAppConfig(this->socketConfig, this->appConfig.at("socketConfigPath"))) {
+
+            std::cerr << "Brak pliku 'socket.yaml' lub zły format pliku yaml!" << std::endl;
+
+            exit(EXIT_FAILURE);
+
+        } else {
+
+            std::cout << "Plik 'socket.yaml' wczytany!" << std::endl;
+        }
+
+        this->configMaps.push_back(this->appConfig);
+        this->configMaps.push_back(this->socketConfig);
+        this->configMaps.push_back(this->serialConfig);
+        this->configMaps.push_back(this->httpConfig);
     }
 }
 
-void ConfigManager::makeAllPaths()
-{
-    this->makeDir(this->programConfig->getPidFileDirPath());
-    this->makeDir(this->programConfig->getConfigDirPath());
-    this->makeDir(this->programConfig->getOffsetDirPath());
-    this->makeDir(this->programConfig->getDataDirPath());
+
+ConfigManager::ConfigManager(ConfigManager &configManager) : appConfig(configManager.appConfig),
+                                                             httpConfig(configManager.httpConfig),
+                                                             serialConfig(configManager.serialConfig),
+                                                             socketConfig(configManager.socketConfig) {
+
+    this->meteoLog = new MyLog("MS-ConfigManager");
+    this->meteoLog = configManager.meteoLog;
+
+
 }
 
-ConfigManager::~ConfigManager()
-{
-    delete this->programConfig;
+ConfigManager::~ConfigManager() {
 
-    delete this->serialConfig;
-
-    delete this->httpConfig;
+    delete this->meteoLog;
 }
+
+
+

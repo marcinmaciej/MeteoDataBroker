@@ -1,45 +1,40 @@
 /**
- * @author  Created by Marcin Guziołek on 06.04.18.
+ * @author  Created by Marcin Guziołek on 06.12.21.
  */
 
 #ifndef METEOLOG_H
 #define METEOLOG_H
 
 
-#include <cstring>  /* strlen, strerror strcat strcpy */
+#include <cstring>  /* strerror() */
+#include <string>/* std::string */
 #include <cerrno>   /* errno */
-#include <unistd.h>  /* getpid, setsid, open, read, write, fork, close, sleep, lockf, ftruncate, mkdir */
-#include <algorithm>
-
 #include <syslog.h> /* openlog, syslog, closelog */
-#include <string>
 
 using namespace std;
 
-class MyLog
-{
+class MyLog {
 
 public:
-    explicit MyLog(string ident = "MeteoStationLog");
+    explicit MyLog(std::string pident = "MeteoStationLog");
 
     ~MyLog() = default;
 
-    void info(const char *msg);
+    void info(const char *msgTitle, const ssize_t *number = nullptr);
 
-    void notice(const char *msg);
+    void notice(const char *msgTitle,const ssize_t *number = nullptr);
 
-    void echoDigit(int digit);
+    void warn(const char *msgTitle, int error_number = 0);
 
-    void warn(const char *msg);
-
-    void err(const char *msg);
+    void err(const char *msgTitle, int error_number = 0);
 
 private:
 
-    string ident;
+    std::string ident, /* Identyfikator procesu */
+    msg;
 
     int facility,
-            levels[8],
+            levels[8] = {},
             options;
 
 

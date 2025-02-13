@@ -2,230 +2,421 @@
  * @author  Created by Marcin Guziołek on 06.04.18.
  */
 
-#include "HttpConnection.h"
-#include <iostream>
+#include "Connection.h"
 
-#define TESTING true
-#define TESTING_HTTP true
 
-HttpConnection::HttpConnection(const ConfigManager &configManager) {
+#define TESTING_HTTP false
+#define SIGPIPE_SOLUTION_SIGPROCMASK false
+#define SIGPIPE_SOLUTION_SIGACTION true
 
-    this->hostIp = "";
-    this->hostName = "";
-    this->request = "";
-    this->requestContent = "";
 
-    this->hints = new addrinfo;
 
-    this->meteoLog = new MyLog("MS-HttpConnection");
+Connection::Connection(const ConfigManager &configManager) : configManager(configManager),
+                                                             hints(new addrinfo),
+                                                             hostIp(),
+                                                             httpRequest(),
+                                                             waitNetworkTime(std::stoi(configManager.getConfig(
+                                                                     "SocketWaitNetwork", configManager.SOCKET))),
+                                                             httpRequestCreator(new HttpRequestCreator(configManager)),
+                                                             meteoLog(new MyLog("CLASS::Connection::")) {
 
-    this->setHostIp(configManager.getHttpConfig("HttpHostIp"));
 
-    this->setHostName(configManager.getHttpConfig("HttpHostName"));
+    this->setHostIp(configManager.getConfig("SocketHostIp", configManager.SOCKET));
 
-    this->setPort(configManager.getHttpConfig("HttpPort"));
+    this->setPort(configManager.getConfig("SocketPort", configManager.SOCKET));
 
-    this->setSocketType(configManager.getHttpConfig("HttpSocketType"));
+    this->setSocketType(configManager.getConfig("SocketType", configManager.SOCKET));
 
-    this->setAddressFamily(configManager.getHttpConfig("HttpAddressFamily"));
+    this->setAddressFamily(configManager.getConfig("SocketAddressFamily", configManager.SOCKET));
 
-    this->setProtocol(configManager.getHttpConfig("HttpProtocol"));
-
-    this->setRequest(configManager.getHttpConfig("HttpRequest"));
-
-    this->setDataKeyName(configManager.getHttpConfig("DataKeyName"));
+    this->setProtocol(configManager.getConfig("SocketProtocol", configManager.SOCKET));
 
     this->setHints();
 
 }
 
-int HttpConnection::httpConnect() {
+void Connection::connectServer() {
 
-    struct addrinfo *rp,
-            *result;
+    struct addrinfo *unique_result,
+            *results;
 
-    result = new addrinfo;
+    int saved_err;
 
-    try {
+    /* Inicjalizuje obszar pamięci dla struktury 'addrinfo' */
+    results = new addrinfo;
 
-        auto *node = new string(
-                (this->getHints()->ai_flags == AI_NUMERICHOST) ? this->getHostIp() : this->getHostName());
 
-        if (getaddrinfo(node->c_str(), this->getPort().c_str(), this->getHints(), &result) > 0) {
-            throw;
+    /* Ustawia numeryczny adres hosta, zgodnie z ustawioną flagą AI_NUMERICHOST */
+    std::string node = this->getHostIp();
+
+
+    /* Pobiera informacje o podanym serwerze i serwisie udostępnianym przez niego, jeżeli jakiś istnieje */
+    int gai = getaddrinfo(node.c_str(), this->getPort().c_str(), this->getHints(), &results);
+
+    /* Funkcja 'getaddrinfo' zwróciła błąd */
+    if (gai == -1) {
+
+        this->meteoLog->err("connectServer(){ getaddrinfo(node,port,hints,results) = -1 }: ", errno);
+
+        std::exit(EXIT_FAILURE);
+    }
+
+    /* Iteruje przez wszystkie wyniki z 'getaddrinfo', aby utworzyć gniazdo i połączyć je z serwerem */
+    for (unique_result = results; unique_result != nullptr; unique_result = unique_result->ai_next) {
+
+        /* Jeżeli nie powiodło się utworzenie gniazda z tym wynikiem kontynuuje z następnym */
+        if (!this->createSocket(unique_result->ai_family, unique_result->ai_socktype, unique_result->ai_protocol)) {
+
+            continue;
         }
 
+        /* Połącz gniazdo z serwerem */
+        int con = connect(this->getSocketDescriptor(), unique_result->ai_addr, unique_result->ai_addrlen);
 
-        for (rp = result; rp != nullptr; rp = rp->ai_next) {
-            this->createSocket(rp->ai_family);
+        /* Jeżeli funkcja 'connect' zwróciła błąd, zapisuje go, żeby nie utracić */
+        saved_err = errno;
 
-            if (this->getSocketDescriptor() == -1) {
-                continue; /* Socket not created yet */
+        /* Funkcja 'connect' zwróciła błąd, połączenie się nie powiodło */
+        if (con == -1) {
+
+            if (saved_err == ENETUNREACH) {
+
+                /*
+                   Nie ma połączenia internetowego, zapisuje w dzienniku systemowym komunikat z czasem,
+                   po którym nastąpi następna próba połączenia i przechodzi w stan uśpienia,
+                   następnie po wybudzeniu wychodzi z pętli
+                */
+                this->waitNetwork();
+
+                break;
+
             }
 
-            if (connect(this->getSocketDescriptor(), rp->ai_addr, rp->ai_addrlen) != -1) {
-                break; /* Success */
-            }
+        } else {/* Połączenie powiodło się, wychodzi z pętli, można wysyłać dane */
+
+            this->meteoLog->notice("Connection established! ");
+
+            this->connected = true;
+
+            break;
         }
+    }
 
-        freeaddrinfo(result);
+    /* Zwalnia pamięć struktury wyników wyszukań 'getaddrinfo' */
+    freeaddrinfo(results);
 
-        //delete node;
+    /* Jeżeli iteracja zakończyła się null-em,
+       nie można było utworzyć gniazda z żadnym hostem, zakończ program */
+    if (unique_result == nullptr) {
 
-        if (rp == nullptr) {
-            return 0;
-        }
+        /* Zapisuje w dzienniku systemowym komunikat o nieznalezieniu hosta do połączenia. */
+        this->meteoLog->err("connectServer(){ getaddrinfo(unique_result==null) }: Niepowodzenie dla każdego hosta ");
 
-#if TESTING
-        this->meteoLog->notice("Http connected!");
-#endif // TESTING
-
-        return 1;
+        std::exit(EXIT_FAILURE);
 
     }
-    catch (...) {
 
-        this->meteoLog->err(strerror(errno));
-
-    }
-    return 0;
 }
 
-bool HttpConnection::sendData(std::string &data) {
 
-    /* Ilość wysałanych bajtów */
-    ssize_t bytesSentToServer = 0;
+bool Connection::sendData(std::string &data) {
 
-    /* Ilość bajtów odczytanych z serwera */
-    ssize_t serverResponseLength = 4196;
+    /* Ilość wysyłanych bajtów */
+    ssize_t bytesSentToServer,
+
+    /* Maksymalna ilość bajtów odczytanych z serwera */
+    serverResponseLength = 4196;
 
     /* Bufor do zapisu odpowiedzi serwera */
-    auto *serverResponse = new char[serverResponseLength+1]();
+    auto *serverResponse = new char[serverResponseLength + 1]();
 
-    if (this->getSocketDescriptor() >= 0) {
+    /* Dodaje dane meteo do zapytania http i zapisuje do pola 'httpRequest' */
+    this->setRequest(this->httpRequestCreator->createRequest(data));
 
-        try {
-            const std::string dataToSend = this->mergeRequestAndData(data);
+    /* Jeżeli zapytanie http nie jest pustym ciągiem wysyłam je do serwera */
+    if (!this->getRequest().empty()) {
 
-            /* send data to the server */
-            if (!dataToSend.empty()) {
-                bytesSentToServer = write(this->getSocketDescriptor(), dataToSend.c_str(), this->getBytesToSend());
-            }
+        int saved_err, rs;
 
-            if (bytesSentToServer > 0) {
+        /*
+           Domyślne działanie sygnału 'SIGPIPE' jest kopiowane do 'old_sigact', a następnie
+           ustawiane jest, działanie ignoruj sygnał SIGPIPE (zamykający process), po udanej próbie
+           zapisu do gniazda na serwerze przywracane jest domyślne działanie sygnału 'SIGPIPE'
+        */
+#if SIGPIPE_SOLUTION_SIGACTION
 
-                /* Odczytuję odpowiedź serwera */
-                serverResponseLength = read(this->getSocketDescriptor(), serverResponse, serverResponseLength);
+        /* Struktura dla funkcji 'sigaction' */
+        struct sigaction sigact{}, old_sigact{};
 
+        /* Ustawia handler na ignoruj sygnał */
+        sigact.sa_handler = SIG_IGN;
 
-#if TESTING_HTTP
+        /* Czyści maskę */
+        sigemptyset(&sigact.sa_mask);
 
-                // Wyświetlam w dzienniku długość wysłanego do serwera zapytania http
-                std::string dataSentLength("Request length sent by http ----> ");
+        /* Zeruje flagi */
+        sigact.sa_flags = 0;
 
-                dataSentLength.append(to_string(bytesSentToServer));
-
-                this->meteoLog->info(dataSentLength.c_str());
-
-                // Zapisuje do pliku wysłane zapytanie http
-                std::string temppath("/home/marcin/myrequest.txt");
-
-                int fd = open(temppath.c_str(), O_CREAT | O_WRONLY, 0777);
-
-                write(fd, dataToSend.c_str(), dataToSend.length());
-                close(fd);
-
-                // Zapisuję do pliku odpowiedź servera
-                temppath.assign("/home/marcin/serverresponse.txt");
-
-                fd = open(temppath.c_str(), O_CREAT | O_WRONLY, 0777);
-
-                write(fd, serverResponse, serverResponseLength);
-                close(fd);
+        /* Kopiuje domyślną akcję dla sygnału 'SIGPIPE' */
+        rs = sigaction(SIGPIPE, nullptr, &old_sigact);
 
 #endif
 
-                return true;
-            }
-        }
-        catch (std::exception &e) {
+#if SIGPIPE_SOLUTION_SIGPROCMASK
 
-            //this->httpClose(); Połączenie jest tu zamykane (NAWET W DESTRUKTORZE) co powoduje nie wykonanie zapytania POST i brak odpowiedzi serwera
-            this->meteoLog->err(e.what());
+        /* Ustawia maskę z zestawem blokowanych sygnałów, tylko 'SIGPIPE' */
+        sigset_t sigpipe_mask;
+        sigemptyset(&sigpipe_mask);
+        sigaddset(&sigpipe_mask, SIGPIPE);
+
+        rs = sigprocmask(SIG_SETMASK, &sigpipe_mask, nullptr);
+
+#endif
+
+        /* Zapisuje błąd, żeby go nie utracić */
+        saved_err = errno;
+
+        /* Został zwrócony błąd */
+        if (rs == -1) {
+
+#ifdef SIGPIPE_SOLUTION_SIGACTION
+
+            this->meteoLog->err("sendData(data){ sigaction(SIGPIPE,NULL,oldact) = -1 }: ",
+                                saved_err);
+
+#endif
+
+#if SIGPIPE_SOLUTION_SIGPROCMASK
+
+            this->meteoLog->err("CLASS::Connection::sendData(data){ sigprocmas(SIG_SETMASK,sigpipe_mask,NULL) = -1 }: ",
+                                saved_err);
+#endif
+
+            std::exit(EXIT_FAILURE);
+
+        }
+
+#if SIGPIPE_SOLUTION_SIGACTION
+
+        /* Ignoruje sygnał 'SIGPIPE' wysyłany przy zapisie do zamkniętego przez host-a gniazda */
+        rs = sigaction(SIGPIPE, &sigact, nullptr);
+
+        /* Jeśli został zwrócony błąd, zapisuje go, żeby nie utracić */
+        saved_err = errno;
+
+        /* Funkcja 'sigaction' zwróciła błąd */
+        if (rs == -1) {
+
+            /* Wpis w dzienniku systemowym */
+            this->meteoLog->err("sendData(data){ sigaction(SIGPIPE,sigact,NULL) = -1 }: ",
+                                saved_err);
+        }
+#endif
+        /* Wysyła dane meteo na serwer */
+        bytesSentToServer = write(this->getSocketDescriptor(), this->getRequest().c_str(),
+                                  this->getRequest().length());
+
+        /* Jeśli został zwrócony błąd, zapisuje go, żeby nie utracić */
+        saved_err = errno;
+
+        /* Funkcja 'write' zwróciła błąd */
+        if (bytesSentToServer == -1) {
+
+            this->connected = false;
+
+            this->meteoLog->err("sendData(data){ write(fd, buf, len) = -1 }: ", saved_err);
+
+        } else if (bytesSentToServer > 0) {
+
+            this->connected = true;
+
+#if SIGPIPE_SOLUTION_SIGACTION
+
+            /* Przywraca domyślną akcję dla sygnału SIGPIPE */
+            rs = sigaction(SIGPIPE, &old_sigact, nullptr);
+
+            /* Jeśli został zwrócony błąd, zapisuje go, żeby nie utracić */
+            saved_err = errno;
+
+            /* Funkcja 'sigaction' zwróciła błąd */
+            if (rs == -1) {
+
+                /* Wpis w dzienniku systemowym */
+                this->meteoLog->err("sendData(data){ sigaction(SIGPIPE,oldact,NULL) = -1 }: ",
+                                    saved_err);
+            }
+#endif
+
+#if TESTING_HTTP
+
+            /* Odczytuję odpowiedź serwera */
+            serverResponseLength = read(this->getSocketDescriptor(), serverResponse, serverResponseLength);
+
+            /* Zapisuje błąd zwrócony przez 'read', żeby go nie utracić */
+            saved_err = errno;
+
+            /* Funkcja 'read' zwróciła błąd */
+            if (serverResponseLength == -1) {
+
+                this->meteoLog->err("TESTING_HTTP::CLASS::Connection::sendData(data){ read(fd,buf,len) = -1 }: ",
+                                    saved_err);
+
+            }
+
+            // Wyświetlam w dzienniku systemowym długość wysłanego do serwera zapytania http
+            this->meteoLog->notice("TESTING_HTTP::Request length sent by http: ", &serverResponseLength);
+
+            /* Zapisuje do pliku wysłane zapytanie http */
+            std::string temppath = "/home/marcin/";
+            temppath += "myrequest.txt";
+
+            int fd = open(temppath.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
+
+            /* Zapisuje błąd zwrócony przez 'open', żeby go nie utracić */
+            saved_err = errno;
+
+            /* Funkcja 'open' zwróciła błąd */
+            if (fd == -1) {
+
+                this->meteoLog->err(
+                        "TESTING_HTTP::Connection::sendData(data){ open(myrequest.txt,O_CREAT | O_WRONLY | O_TRUNC,0777) = -1 }: ",
+                        saved_err);
+            }
+
+            ssize_t len = write(fd, this->getRequest().c_str(), this->getRequest().length());
+
+            /* Zapisuje błąd zwrócony przez 'write', żeby go nie utracić */
+            saved_err = errno;
+
+            /* Funkcja write zwróciła błąd */
+            if (len == -1) {
+
+                this->meteoLog->err("TESTING_HTTP::CLASS::sendData(data){ write(myrequest.txt-Desc,buf,len) }: ",
+                                    saved_err);
+            }
+
+            close(fd);
+
+
+            // Zapisuję do pliku odpowiedź servera
+            temppath = "/home/marcin/";
+            temppath += "serverresponse.txt";
+
+            fd = open(temppath.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
+
+            /* Zapisuje błąd zwrócony przez 'open', żeby go nie utracić */
+            saved_err = errno;
+
+            /* Funkcja 'open' zwróciła błąd */
+            if (fd == -1) {
+
+                this->meteoLog->err(
+                        "TESTING_HTTP::CLASS::Connection::sendData(data){ open(serverresponse.txt,O_CREAT | O_WRONLY | O_TRUNC,0777) = -1 }: ",
+                        saved_err);
+            }
+
+            len = write(fd, serverResponse, serverResponseLength);
+
+            /* Zapisuje błąd zwrócony przez 'write', żeby go nie utracić */
+            saved_err = errno;
+
+            /* Funkcja 'write' zwróciła błąd */
+            if (len == -1) {
+
+                this->meteoLog->err(
+                        "TESTING_HTTP::CLASS::Connection::sendData(data){ write(serverresponse.txt-Desc,buf,len) = -1 }: ",
+                        saved_err);
+            }
+
+            close(fd);
+#endif
+
         }
     }
-    return false;
+
+    return this->connected;
 }
+
 
 /* PRIVATE METHODS */
 
-const std::string &HttpConnection::mergeRequestAndData(std::string &data) {
+bool Connection::createSocket(int ai_family, int ai_socktype, int ai_protocol) {
 
-    std::string dataLengthAsString,
-            trequest;
+    bool *created = new bool;
 
-    this->requestContent = "";
+    /* Zamyka ostatnio używane gniazdo, zanim otworzy nowe */
+    this->closeConnection();
 
-    /*
-     * Ustalam długość danych
-     * Długość pary 'klucz=wartość'
-     * */
-    size_t len = this->getDataKeyName().length();
-    len += data.length();
 
-    /* Pobieram zapytanie załadowane z pliku konfiguracyjnego */
-    trequest = this->getRequest();
+    /* Tworzy nowe gniazdo */
+    int sd = socket(ai_family, ai_socktype, ai_protocol);
 
-    /* Znajduję pozycję ogranicznika w zapytaniu */
-    std::string::size_type start = trequest.find(placeHolder),
-            delimLen = placeHolder.length();
+    /* Zapisuje błąd, żeby go nie utracić */
+    int saved_err = errno;
 
-    /* Konwertuje liczbę danych do stringa */
-    dataLengthAsString = to_string(len);
+    /* Funkcja 'socket' zwróciła błąd */
+    if (sd == -1) {
 
-    /* Podmieniam ogranicznik w nagłówku "content-length" zapytania http wartością liczbową */
-    if (!trequest.replace(start, delimLen, dataLengthAsString).empty()) {
+        *created = false;
 
-        /* Dodaję do zapytania http dane do wysłania
-         * w formie klucz=wartość */
-        trequest.append(this->getDataKeyName());
-        trequest.append("=");
-        trequest.append(data);
+        this->meteoLog->err(
+                "creatSocket(family,socktype,protocol){ socket(family,socktype,protocol) = -1 }: ",
+                saved_err);
 
-        /* Ustawiam pole requestContent aby móc zwrócić stałą referencję */
-        this->requestContent = trequest;
+    } else { /* Funkcja 'socket' nie zwróciła błędu */
 
-        this->setBytesToSend(this->requestContent.length());
+        /* Ustawiam uchwyt do utworzonego gniazda */
+        this->setSocketDescriptor(sd);
 
-        return this->requestContent;
+        *created = true;
     }
 
-    return this->requestContent;
-
+    return *created;
 }
 
-void HttpConnection::createSocket(int ai_family) {
-    try {
+void Connection::setProtocol(const std::string &pprotocol) {
 
-        this->setSocketDescriptor(socket(ai_family, this->getSocketType(), this->getProtocol()));
+    if (toLowerCase(pprotocol,*this->meteoLog) != "none") {
 
-    }
-    catch (...) {
-        this->meteoLog->err(strerror(errno));
-    }
-}
+        /*
+           Pobiera z bazy danych wartość liczbową protokołu odpowiadającej oficjalnej zadanej nazwie,
+           jeżeli nazwa niepoprawna lub jej brak zwraca null pointer
+        */
+        struct protoent *result = getprotobyname(pprotocol.c_str());
 
-void HttpConnection::setProtocol(const std::string &pprotocol) {
+        /* Funkcja 'getprotobyname' zwróciła strukturę 'protoent' */
+        if (result != nullptr) {
 
-    if (this->toLowerCase(pprotocol) != "none") {
+            this->protocol = result->p_proto;
 
-        this->protocol = std::stoi(pprotocol);
+        } else { /* Funkcja 'getprotobyname' zwróciła null pointer */
+
+            /* Zapisuje do dziennika systemowego komunikat o braku w bazie danych nazwy protokołu. */
+            this->meteoLog->err(
+                    "setProtocol(protocol){ getprotobyname(protocol) }: Nie znaleziono takiego protokołu w /etc/protocols. ");
+        }
+
     }
 }
 
-void HttpConnection::setAddressFamily(const std::string &pfamily) {
+/*
+   Usypia proces na zadany czas i zapisuje do dziennika systemowego informację
+   o oczekiwaniu na połączenie internetowe
+*/
+void Connection::waitNetwork() {
 
-    if (this->toLowerCase(pfamily) != "both") {
+    std::string msg = "Waiting for INTERNET CONNECTION! Retrying in seconds: " + std::to_string(this->getWaitNetwork());
+    this->meteoLog->info(msg.c_str());
+
+    this->connected = false;
+
+    sleep(this->getWaitNetwork());
+}
+
+
+void Connection::setAddressFamily(const std::string &pfamily) {
+
+    if (toLowerCase(pfamily, *this->meteoLog) != "both") {
         if (pfamily == "ip4") {
             this->family = AF_INET;
         } else if (pfamily == "ip6") {
@@ -234,9 +425,9 @@ void HttpConnection::setAddressFamily(const std::string &pfamily) {
     }
 }
 
-void HttpConnection::setSocketType(const std::string &psocketType) {
+void Connection::setSocketType(const std::string &psocketType) {
 
-    if (this->toLowerCase(psocketType) != "tcp") {
+    if (toLowerCase(psocketType, *this->meteoLog) != "tcp") {
         if (psocketType == "udp") {
             this->socketType = SOCK_DGRAM;
         } else if (psocketType == "raw") {
@@ -245,127 +436,132 @@ void HttpConnection::setSocketType(const std::string &psocketType) {
     }
 }
 
-void HttpConnection::setHints() {
+void Connection::setHints() {
 
+    /* Inicjuje pamięć dla struktury 'hints' odpowiednio do rozmiaru struktury 'addrinfo' */
     memset(this->getHints(), 0, sizeof(struct addrinfo));
+
+    /* Ustawia odpowiednio pierwsze cztery elementy struktury 'hints',
+     * pozostałe null lub 0
+     * */
 
     this->getHints()->ai_family = this->getAddressFamily();
     this->getHints()->ai_socktype = this->getSocketType();
     this->getHints()->ai_protocol = this->getProtocol();
     this->getHints()->ai_flags = this->getFlags();
-    this->getHints()->ai_addr = 0;
+    this->getHints()->ai_addr = nullptr;
     this->getHints()->ai_addrlen = 0;
-    this->getHints()->ai_canonname = 0;
-    this->getHints()->ai_next = 0;
+    this->getHints()->ai_canonname = nullptr;
+    this->getHints()->ai_next = nullptr;
 
 }
 
 
-addrinfo *HttpConnection::getHints() const {
+addrinfo *Connection::getHints() const {
     return this->hints;
 }
 
-std::string HttpConnection::getHostName() const {
-    return this->hostName;
-}
 
-void HttpConnection::setHostName(const std::string &phostName) {
-    this->hostName = phostName;
-}
-
-std::string HttpConnection::getHostIp() const {
+std::string Connection::getHostIp() const {
     return this->hostIp;
 }
 
-void HttpConnection::setHostIp(const std::string &phostIp) {
+
+void Connection::setHostIp(const std::string &phostIp) {
     this->hostIp = phostIp;
 }
 
-std::string HttpConnection::getPort() const {
+
+std::string Connection::getPort() const {
     return this->port;
 }
 
-void HttpConnection::setPort(const std::string &pport) {
+
+void Connection::setPort(const std::string &pport) {
     this->port = pport;
 }
 
-int HttpConnection::getSocketDescriptor() const {
+
+int Connection::getSocketDescriptor() const {
     return this->socketDescriptor;
 }
 
-void HttpConnection::setSocketDescriptor(int psocketDescriptor) {
+
+void Connection::setSocketDescriptor(int psocketDescriptor) {
     this->socketDescriptor = psocketDescriptor;
 }
 
-int HttpConnection::getSocketType() const {
+
+int Connection::getSocketType() const {
     return this->socketType;
 }
 
-int HttpConnection::getProtocol() const {
+
+int Connection::getProtocol() const {
     return this->protocol;
 }
 
-int HttpConnection::getFlags() const {
+
+int Connection::getFlags() const {
     return this->flags;
 }
 
-void HttpConnection::setFlags(int pflags) {
-    this->flags = pflags;
-}
 
-int HttpConnection::getAddressFamily() const {
+int Connection::getAddressFamily() const {
     return this->family;
 }
 
-std::string HttpConnection::getRequest() const {
-    return this->request;
+std::string Connection::getRequest() const {
+    return this->httpRequest;
 }
 
-void HttpConnection::setRequest(const std::string &prequest) {
-    this->request = prequest;
+
+void Connection::setRequest(const std::string &prequest) {
+    this->httpRequest = prequest;
 }
 
-std::string HttpConnection::getDataKeyName() const {
-    return this->dataKeyName;
+
+int Connection::getWaitNetwork() const {
+    return this->waitNetworkTime;
 }
 
-void HttpConnection::setDataKeyName(const std::string &pkeyname) {
-    this->dataKeyName = pkeyname;
+
+bool Connection::isConnected() const {
+
+    return this->connected;
 }
 
-size_t HttpConnection::getBytesToSend() {
-    return this->bytesToSend;
-}
 
-void HttpConnection::setBytesToSend(size_t pbytesToSend) {
-    this->bytesToSend = pbytesToSend;
-}
+void Connection::closeConnection() {
 
-void HttpConnection::httpClose() {
     close(this->getSocketDescriptor());
-}
-
-std::string HttpConnection::toLowerCase(const std::string &pstring) {
-
-    std::string temp = pstring;
-    transform(temp.begin(), temp.end(), temp.begin(), ::tolower); /* Zmień litery na małe */
-    return temp;
+    this->connected = false;
 
 }
+
+
+/* Konstruktor kopiujący */
+Connection::Connection(Connection &connection) : configManager(connection.configManager) {
+
+    this->waitNetworkTime = connection.getWaitNetwork();
+
+    this->httpRequestCreator = new HttpRequestCreator(connection.configManager);
+    this->httpRequestCreator = connection.httpRequestCreator;
+
+    this->meteoLog = new MyLog("MS::SocketConnection");
+    this->meteoLog = connection.meteoLog;
+
+
+    this->hints = new struct addrinfo;
+    this->hints = connection.getHints();
+
+}
+
+
 /* Destruktor */
-HttpConnection::~HttpConnection() {
+Connection::~Connection() {
 
     delete this->meteoLog;
     delete this->hints;
-
-}
-/* Konstruktor kopiujący */
-HttpConnection::HttpConnection(HttpConnection &httpConnection) {
-
-    this->meteoLog = new MyLog("MS-HttpdConnection");
-    this->meteoLog = httpConnection.meteoLog;
-
-    this->hints = new struct addrinfo;
-    this->hints = httpConnection.hints;
 
 }
