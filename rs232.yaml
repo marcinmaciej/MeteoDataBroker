@@ -1,0 +1,11 @@
+%YAML 1.2
+---
+SerialSleepTime: 1
+SerialDataLength: 1024
+SerialPort: /dev/ttyUSB0
+SerialSpeed: 9600
+SerialDataBits: 8
+SerialStopBits: 1
+SerialParity: none
+SerialFlowControl: none
+---
