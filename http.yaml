@@ -1,10 +1,10 @@
 %YAML 1.2
 ---
 HttpMethod: POST # Dodatkowo obsługiwane są GET, PUT, PATCH
-HttpPath: /index.php
+HttpPath: meteostation/index.php
 HttpDataKeyName: data # Nazwa klucza, do którego przypisane są pobrane dane
 HttpHeaders: # Nagłówki zapytania http — Host obowiązkowy
-  Host: mymeteo.cba.pl
+  Host: mytestapps.free.nf
   Content-Type: application/x-www-form-urlencoded
   Connection: Keep-Alive
 ---

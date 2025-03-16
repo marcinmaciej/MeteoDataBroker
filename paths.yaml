@@ -7,6 +7,6 @@ socketConfigPath: /etc/meteo-station/config/socket.yaml
 appConfigPath: /etc/meteo-station/config/paths.yaml
 pidFileDirPath: /etc/meteo-station/
 #execPath: /usr/bin/meteo-station # ścieżka dla wersji release
-execPath: /home/marcin/Dokumenty/Moje_Projekty/CLionProjects/MeteoStationDriver/cmake-build-debug/meteo-station
+execPath:  /home/marcin/MojeProjekty/CLionProjects/Praca_dyplomowa/MeteoStationDriver/cmake-build-debug/meteo-station
 #execPath: /home/pi/MeteoStationDriver/build/meteo-station # testy na raspberryPi
 ---

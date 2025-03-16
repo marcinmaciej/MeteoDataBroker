@@ -2,7 +2,7 @@
 ---
 SocketSleepTime: 1 # liczba sekund uśpienia procesu
 SocketWaitNetwork: 60 # liczba sekund w oczekiwaniu na połączenie internetowe
-SocketHostIp: 95.211.144.69
+SocketHostIp: 185.27.134.179
 SocketPort: 80 # numer serwisu dla hosta
 SocketAddressFamily: ip4 # both, ip4, ip6
 SocketType: tcp # tcp, udp, raw
