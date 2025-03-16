@@ -214,10 +214,10 @@ void ConfigManager::loadAllConfigFiles() {
 }
 
 
-ConfigManager::ConfigManager(ConfigManager &configManager) : appConfig(configManager.appConfig),
+ConfigManager::ConfigManager(const ConfigManager &configManager) : serialConfig(configManager.serialConfig),
                                                              httpConfig(configManager.httpConfig),
-                                                             serialConfig(configManager.serialConfig),
-                                                             socketConfig(configManager.socketConfig) {
+                                                             socketConfig(configManager.socketConfig),
+                                                             appConfig(configManager.appConfig) {
 
     this->meteoLog = new MyLog("MS-ConfigManager");
     this->meteoLog = configManager.meteoLog;

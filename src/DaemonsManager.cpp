@@ -308,13 +308,13 @@ DaemonsManager::~DaemonsManager() {
 
     delete[] this->daemonsPids;
     delete this->meteoLog;
-    delete pidFileDirPath;
+    delete this->pidFileDirPath;
 }
 
 
 /* Konstruktor kopiujący */
 
-DaemonsManager::DaemonsManager(DaemonsManager &daemonsManager) : configManager(daemonsManager.getConfigManager()) {
+DaemonsManager::DaemonsManager(const DaemonsManager &daemonsManager) : configManager(daemonsManager.getConfigManager()) {
 
     this->pidFileDirPath = new std::string;
     this->pidFileDirPath = daemonsManager.pidFileDirPath;

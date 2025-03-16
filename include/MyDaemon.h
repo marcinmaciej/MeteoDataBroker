@@ -21,7 +21,7 @@ public:
 
     explicit MyDaemon(Task *task, const string &daemonName, const string &ppidDirPath);
 
-    MyDaemon(MyDaemon &myDaemon);
+    MyDaemon(const MyDaemon &myDaemon);
 
     ~MyDaemon();
 

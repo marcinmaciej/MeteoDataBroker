@@ -643,7 +643,7 @@ const ConfigManager &SerialTask::getConfigManager() const {
 
 
 /* Konstruktor kopiujący */
-SerialTask::SerialTask(SerialTask &serialTask) : Task(serialTask.configManager), PIPEDESC(serialTask.PIPEDESC) {
+SerialTask::SerialTask(const SerialTask &serialTask) : Task(serialTask.configManager), PIPEDESC(serialTask.PIPEDESC) {
 
     this->meteoLog = MyLog("MS::SerialTask");
     this->meteoLog = serialTask.meteoLog;

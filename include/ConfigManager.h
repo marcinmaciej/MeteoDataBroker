@@ -21,7 +21,7 @@ public:
 
     explicit ConfigManager(const char *appConfigPath);
 
-    ConfigManager(ConfigManager &configManager);
+    ConfigManager(const ConfigManager &configManager);
 
     ~ConfigManager();
 

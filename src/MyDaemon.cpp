@@ -234,7 +234,7 @@ MyDaemon::~MyDaemon() {
 
 }
 
-MyDaemon::MyDaemon(MyDaemon &myDaemon) : task(myDaemon.task),
+MyDaemon::MyDaemon(const MyDaemon &myDaemon) : task(myDaemon.task),
                                          sid(myDaemon.getSid()),
                                          pidFileDescriptor(myDaemon.getPidFileDesc()) {
 

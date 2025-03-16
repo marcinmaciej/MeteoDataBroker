@@ -24,7 +24,7 @@ public:
     explicit DaemonsManager(const ConfigManager &configManager);
 
     // Copying constructor
-    DaemonsManager(DaemonsManager &daemonsManager);
+    DaemonsManager(const DaemonsManager &daemonsManager);
 
     ~DaemonsManager();
 
@@ -55,7 +55,7 @@ private:
     /* Odpowiednio zapisane nazwy demonów */
     const std::string daemonsNames[2] = {"httpd", "rs232d"};
 
-    const std::string *pidFileDirPath;
+    std::string *pidFileDirPath;
 
     pid_t *daemonsPids;
 

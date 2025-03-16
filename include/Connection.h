@@ -29,7 +29,7 @@ public:
 
     explicit Connection(const ConfigManager &configManager);
 
-    Connection(Connection &connection);
+    Connection(const Connection &connection);
 
     ~Connection();
 

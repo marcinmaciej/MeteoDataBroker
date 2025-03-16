@@ -29,7 +29,7 @@ class SerialTask : public Task {
 public:
     explicit SerialTask(const ConfigManager & configManager, int pipeDesc);
 
-    SerialTask(SerialTask &serialTask);
+    SerialTask(const SerialTask &serialTask);
 
     ~SerialTask() override;
 

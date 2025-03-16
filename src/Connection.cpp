@@ -541,7 +541,7 @@ void Connection::closeConnection() {
 
 
 /* Konstruktor kopiujący */
-Connection::Connection(Connection &connection) : configManager(connection.configManager) {
+Connection::Connection(const Connection &connection) : configManager(connection.configManager) {
 
     this->waitNetworkTime = connection.getWaitNetwork();
 
@@ -554,6 +554,8 @@ Connection::Connection(Connection &connection) : configManager(connection.config
 
     this->hints = new struct addrinfo;
     this->hints = connection.getHints();
+
+
 
 }
 
