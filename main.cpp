@@ -146,7 +146,7 @@ restartOnBrokenPipe(const ConfigManager &configManager, MyLog &meteoLog, const i
 
     }
 
-    std::string msg = lockPath + "::execv(execPath,newArgv) = -1: ";
+    std::string msg = "restartOnBrokenPipe() -> " + lockPath + "::execv(execPath,newArgv) = -1: ";
 
     /* Restartuje program */
     if (execv(configManager.getConfig("execPath", configManager.APP).c_str(), newArgv) == -1) {
